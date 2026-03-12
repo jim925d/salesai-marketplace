@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commission Calculator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080B12;--bg2:#0D1117;--bg3:#161B22;--accent:#10B981;--accent-dim:rgba(16,185,129,0.08);--accent-bdr:rgba(16,185,129,0.2);--text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;--bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);--glass:rgba(230,237,243,0.02);--green:#3FB950;--red:#F85149;--yellow:#E3B341;--blue:#58A6FF;--purple:#D2A8FF;--orange:#F0883E}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}.logo span{font-family:Georgia,serif;font-size:15px}
+.hdr-actions{display:flex;gap:6px}
+.hbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}.hbtn:hover{border-color:var(--accent);color:var(--accent)}.hbtn.active{background:var(--accent-dim);border-color:var(--accent-bdr);color:var(--accent)}
+.panel{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s}.panel.open{max-height:500px}
+.panel-inner{padding:20px 28px}
+.container{max-width:960px;margin:0 auto;padding:28px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+.tabs{display:flex;gap:4px;margin-bottom:20px}.tab{background:var(--glass);border:1px solid var(--bdr);color:var(--text2);padding:9px 18px;border-radius:7px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;transition:all .2s}.tab:hover{border-color:var(--bdr-h)}.tab.active{background:var(--accent-dim);border-color:var(--accent-bdr);color:var(--accent)}
+input[type=number],input[type=text],select,textarea{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:10px 12px;border-radius:8px;font-family:inherit;font-size:13px;outline:none;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent-bdr)}
+input[type=range]{width:100%;-webkit-appearance:none;background:transparent;margin:8px 0}
+input[type=range]::-webkit-slider-track{height:6px;border-radius:3px;background:var(--bg3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;margin-top:-6px}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.plan-field{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:12px}
+.plan-field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;text-align:center}
+.stat-val{font-family:Georgia,serif;font-size:24px;letter-spacing:-1px}
+.stat-label{font-size:10px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+.quota-bar{background:var(--bg3);border-radius:8px;height:24px;overflow:hidden;margin-bottom:6px;position:relative}
+.quota-fill{height:100%;border-radius:8px;transition:width .4s ease}
+.quota-marker{position:absolute;top:0;height:100%;width:2px;background:var(--text)}
+.quota-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3)}
+.breakdown{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.brow{display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--bdr);font-size:13px}
+.brow:last-child{border-bottom:none}
+.brow-label{color:var(--text2)}.brow-val{font-weight:600;font-family:Georgia,serif}
+.deal-input{background:var(--glass);border:1px solid var(--bdr);border-radius:10px;padding:16px;margin-bottom:16px}
+.slider-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.slider-label{font-size:12px;color:var(--text2);min-width:100px}
+.slider-val{font-size:14px;font-weight:600;font-family:Georgia,serif;min-width:80px;text-align:right;color:var(--accent)}
+.gbtn{background:var(--accent);color:#000;border:none;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}.gbtn:hover{transform:translateY(-1px)}.gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.sg{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;max-width:640px}
+.sg label{font-size:12px;color:var(--text2)}
+.ks{font-size:10px;font-family:monospace;margin-top:3px}.ks.ok{color:var(--green)}.ks.no{color:var(--red)}
+.loading{text-align:center;padding:32px}.spinner{width:24px;height:24px;border:2px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px}
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:12px;border-radius:8px;font-size:13px;margin-top:12px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="logo"><div class="logo-mark">💰</div><span>Commission Calc</span></div>
+<div class="hdr-actions"><button class="hbtn" id="aiBtn" onclick="togglePanel('ai')">🤖 AI Plan Reader</button><button class="hbtn" onclick="togglePanel('settings')">⚙ Settings</button></div></div>
+
+<div class="panel" id="panel-settings"><div class="panel-inner"><div class="sg">
+<label>AI Provider</label><select id="provider" onchange="sS()"><option value="openai">OpenAI (GPT-4o)</option><option value="anthropic">Anthropic (Claude)</option></select>
+<label>API Key</label><div><input type="password" id="apiKey" placeholder="Only needed for AI Plan Reader" oninput="sS()"><div class="ks" id="keyStatus"></div></div>
+</div></div></div>
+
+<div class="panel" id="panel-ai"><div class="panel-inner">
+<div class="sl">AI Plan Interpreter</div>
+<p style="font-size:12px;color:var(--text2);margin-bottom:12px">Paste your compensation plan document. The AI will extract all parameters and fill the calculator automatically.</p>
+<textarea id="planText" style="min-height:120px;resize:vertical" placeholder="Paste your comp plan text here...&#10;&#10;Example:&#10;FY26 Comp Plan — AE, Mid-Market&#10;Annual quota: $1,200,000&#10;Base commission: 10% of ACV&#10;Accelerator: 15% on bookings above 100% of quota&#10;Decelerator: 5% on bookings below 50% of quota&#10;New logo SPIF: $2,000 per new logo&#10;Multi-year: 1.1x for 2-year, 1.2x for 3-year"></textarea>
+<button class="gbtn" style="margin-top:10px" onclick="interpretPlan()">Extract Plan Parameters</button>
+<div id="aiOutput" style="margin-top:10px"></div>
+</div></div>
+
+<div class="container">
+<!-- Plan config -->
+<div style="margin-bottom:24px">
+  <div class="sl">Comp Plan Configuration</div>
+  <div class="plan-grid">
+    <div class="plan-field"><label>Annual Quota ($)</label><input type="number" id="quota" value="1000000" onchange="calc()"></div>
+    <div class="plan-field"><label>Base Commission Rate (%)</label><input type="number" id="baseRate" value="10" step="0.5" onchange="calc()"></div>
+    <div class="plan-field"><label>Accelerator Threshold (% of quota)</label><input type="number" id="accelThresh" value="100" onchange="calc()"></div>
+    <div class="plan-field"><label>Accelerator Rate (%)</label><input type="number" id="accelRate" value="15" step="0.5" onchange="calc()"></div>
+    <div class="plan-field"><label>Decelerator Threshold (% of quota)</label><input type="number" id="decelThresh" value="50" onchange="calc()"></div>
+    <div class="plan-field"><label>Decelerator Rate (%)</label><input type="number" id="decelRate" value="5" step="0.5" onchange="calc()"></div>
+    <div class="plan-field"><label>SPIF per New Logo ($)</label><input type="number" id="spif" value="0" onchange="calc()"></div>
+    <div class="plan-field"><label>YTD Bookings ($)</label><input type="number" id="ytd" value="0" onchange="calc()"></div>
+  </div>
+  <button style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit" onclick="savePlan()">💾 Save this plan</button>
+</div>
+
+<!-- Deal modeler -->
+<div style="margin-bottom:24px">
+  <div class="sl">Model a Deal</div>
+  <div class="deal-input">
+    <div class="slider-row"><span class="slider-label">Deal Value</span><input type="range" id="dealSlider" min="5000" max="500000" step="5000" value="50000" oninput="calc()"><span class="slider-val" id="dealVal">$50,000</span></div>
+    <div class="slider-row"><span class="slider-label">Discount</span><input type="range" id="discountSlider" min="0" max="40" step="1" value="0" oninput="calc()"><span class="slider-val" id="discountVal" style="color:var(--text2)">0%</span></div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <div class="plan-field" style="flex:1;margin:0"><label>Multi-Year</label><select id="multiYear" onchange="calc()"><option value="1">1 year (1.0x)</option><option value="1.1">2 year (1.1x)</option><option value="1.2">3 year (1.2x)</option></select></div>
+      <div class="plan-field" style="flex:1;margin:0"><label>New Logo?</label><select id="newLogo" onchange="calc()"><option value="0">No</option><option value="1">Yes</option></select></div>
+    </div>
+  </div>
+</div>
+
+<!-- Results -->
+<div id="results">
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-val" style="color:var(--accent)" id="rComm">$0</div><div class="stat-label">Commission</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)" id="rRate">0%</div><div class="stat-label">Effective Rate</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--blue)" id="rAttain">0%</div><div class="stat-label">Attainment After</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--purple)" id="rProj">$0</div><div class="stat-label">Projected Annual</div></div>
+  </div>
+
+  <div class="sl" style="margin-top:4px">Quota Progress</div>
+  <div class="quota-bar" id="quotaBar"><div class="quota-fill" id="quotaFill" style="width:0%;background:var(--accent)"></div></div>
+  <div class="quota-labels"><span id="qYTD">$0 YTD</span><span id="qRemain">$1,000,000 remaining</span><span id="qQuota">Quota: $1,000,000</span></div>
+
+  <div class="sl" style="margin-top:20px">Calculation Breakdown</div>
+  <div class="breakdown" id="breakdown"></div>
+</div>
+</div>
+
+<script>
+(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='salesai-key-delivery'){document.getElementById('provider').value=e.data.provider;document.getElementById('apiKey').value=e.data.key;sS();uK();}});if(window.parent!==window){window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');setTimeout(()=>window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*'),100);}})();
+</script>
+<script>
+function togglePanel(id){document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='panel-'+id)p.classList.remove('open');});document.getElementById('panel-'+id).classList.toggle('open');}
+function sS(){try{localStorage.setItem('salesai_commission_settings',JSON.stringify({provider:document.getElementById('provider').value,apiKey:document.getElementById('apiKey').value}));}catch(e){}uK();}
+function lS(){try{var s=JSON.parse(localStorage.getItem('salesai_commission_settings')||'{}');if(s.provider)document.getElementById('provider').value=s.provider;if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;}catch(e){}loadPlan();uK();}
+function uK(){var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');el.className=k?'ks ok':'ks no';el.textContent=k?'✓ Key saved':'⚠ No key (only needed for AI reader)';}
+function saveSettings(){sS();}function updateKeyStatus(){uK();}
+
+function savePlan(){
+  var plan={quota:gV('quota'),baseRate:gV('baseRate'),accelThresh:gV('accelThresh'),accelRate:gV('accelRate'),decelThresh:gV('decelThresh'),decelRate:gV('decelRate'),spif:gV('spif'),ytd:gV('ytd')};
+  localStorage.setItem('salesai_commission_plan',JSON.stringify(plan));
+  alert('Plan saved!');
+}
+function loadPlan(){
+  try{var p=JSON.parse(localStorage.getItem('salesai_commission_plan')||'{}');
+  if(p.quota)document.getElementById('quota').value=p.quota;
+  if(p.baseRate)document.getElementById('baseRate').value=p.baseRate;
+  if(p.accelThresh)document.getElementById('accelThresh').value=p.accelThresh;
+  if(p.accelRate)document.getElementById('accelRate').value=p.accelRate;
+  if(p.decelThresh)document.getElementById('decelThresh').value=p.decelThresh;
+  if(p.decelRate)document.getElementById('decelRate').value=p.decelRate;
+  if(p.spif)document.getElementById('spif').value=p.spif;
+  if(p.ytd)document.getElementById('ytd').value=p.ytd;
+  }catch(e){}
+}
+
+function gV(id){return parseFloat(document.getElementById(id).value)||0;}
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+
+function calc(){
+  var quota=gV('quota'), baseRate=gV('baseRate')/100, accelThresh=gV('accelThresh')/100, accelRate=gV('accelRate')/100, decelThresh=gV('decelThresh')/100, decelRate=gV('decelRate')/100, spif=gV('spif'), ytd=gV('ytd');
+  var dealRaw=parseFloat(document.getElementById('dealSlider').value)||0;
+  var discount=parseFloat(document.getElementById('discountSlider').value)||0;
+  var multiYear=parseFloat(document.getElementById('multiYear').value)||1;
+  var newLogo=parseInt(document.getElementById('newLogo').value)||0;
+
+  // Update display values
+  document.getElementById('dealVal').textContent=fmt(dealRaw);
+  document.getElementById('discountVal').textContent=discount+'%';
+
+  var dealNet=dealRaw*(1-discount/100);
+  var dealCredit=dealNet*multiYear;
+  var newYTD=ytd+dealCredit;
+  var attainBefore=quota>0?ytd/quota:0;
+  var attainAfter=quota>0?newYTD/quota:0;
+
+  // Calculate commission on this deal
+  var commission=0;
+  var steps=[];
+
+  steps.push({label:'Deal value',value:fmt(dealRaw)});
+  if(discount>0)steps.push({label:'After '+discount+'% discount',value:fmt(dealNet)});
+  if(multiYear>1)steps.push({label:'Multi-year credit ('+multiYear+'x)',value:fmt(dealCredit)});
+
+  // Determine which rate applies based on where YTD is relative to quota
+  var rate=baseRate;
+  var rateName='Base rate';
+  if(quota>0){
+    if(attainAfter>=accelThresh&&accelThresh>0){
+      // Some portion at base, some at accelerator
+      var basePortionEnd=Math.max(0,quota*accelThresh-ytd);
+      var accelPortion=dealCredit-Math.max(0,basePortionEnd);
+      if(attainBefore>=accelThresh){
+        // Already above threshold — all at accelerator
+        commission=dealCredit*accelRate;
+        rate=accelRate;rateName='Accelerator';
+        steps.push({label:'All at accelerator rate ('+gV('accelRate')+'%)',value:fmt(commission)});
+      }else if(basePortionEnd>0&&accelPortion>0){
+        var basePart=basePortionEnd*baseRate;
+        var accelPart=accelPortion*accelRate;
+        commission=basePart+accelPart;
+        rate=commission/dealCredit;
+        steps.push({label:fmt(basePortionEnd)+' at base ('+gV('baseRate')+'%)',value:fmt(basePart)});
+        steps.push({label:fmt(accelPortion)+' at accelerator ('+gV('accelRate')+'%)',value:fmt(accelPart)});
+      }else{
+        commission=dealCredit*baseRate;
+        steps.push({label:'At base rate ('+gV('baseRate')+'%)',value:fmt(commission)});
+      }
+    }else if(attainBefore<decelThresh&&decelThresh>0&&decelRate>0){
+      commission=dealCredit*decelRate;
+      rate=decelRate;rateName='Decelerator';
+      steps.push({label:'Below threshold — decel rate ('+gV('decelRate')+'%)',value:fmt(commission)});
+    }else{
+      commission=dealCredit*baseRate;
+      steps.push({label:'At base rate ('+gV('baseRate')+'%)',value:fmt(commission)});
+    }
+  }else{
+    commission=dealCredit*baseRate;
+    steps.push({label:'At base rate ('+gV('baseRate')+'%)',value:fmt(commission)});
+  }
+
+  var spifAmount=newLogo?spif:0;
+  if(spifAmount>0){commission+=spifAmount;steps.push({label:'New logo SPIF',value:fmt(spifAmount)});}
+
+  steps.push({label:'Total commission on this deal',value:fmt(commission)});
+
+  var effectiveRate=dealCredit>0?(commission/dealCredit*100):0;
+  var remaining=Math.max(0,quota-newYTD);
+  var monthsLeft=12-new Date().getMonth();
+  var projectedAnnual=monthsLeft>0?(newYTD/((12-monthsLeft)||1))*12:newYTD;
+
+  // Update stats
+  document.getElementById('rComm').textContent=fmt(commission);
+  document.getElementById('rRate').textContent=effectiveRate.toFixed(1)+'%';
+  document.getElementById('rAttain').textContent=(attainAfter*100).toFixed(0)+'%';
+  document.getElementById('rProj').textContent=fmt(projectedAnnual*(commission/dealCredit||baseRate));
+
+  // Quota bar
+  var pct=Math.min(attainAfter*100,150);
+  var barColor=attainAfter>=1?'var(--accent)':attainAfter>=0.5?'var(--yellow)':'var(--red)';
+  document.getElementById('quotaFill').style.width=Math.min(pct,100)+'%';
+  document.getElementById('quotaFill').style.background=barColor;
+  document.getElementById('qYTD').textContent=fmt(newYTD)+' YTD (after deal)';
+  document.getElementById('qRemain').textContent=remaining>0?fmt(remaining)+' remaining':'🎉 Quota exceeded by '+fmt(-remaining);
+  document.getElementById('qQuota').textContent='Quota: '+fmt(quota);
+
+  // Breakdown
+  var bh=steps.map(function(s,i){
+    var isTotal=i===steps.length-1;
+    return '<div class="brow" style="'+(isTotal?'background:var(--accent-dim);font-weight:700':'')+'"><span class="brow-label">'+(isTotal?'<strong style="color:var(--accent)">'+s.label+'</strong>':s.label)+'</span><span class="brow-val" style="'+(isTotal?'color:var(--accent)':'')+'">'+s.value+'</span></div>';
+  }).join('');
+  document.getElementById('breakdown').innerHTML=bh;
+}
+
+// AI Plan Interpreter
+async function callAI(p,s){var pv=document.getElementById('provider').value,k=document.getElementById('apiKey').value;if(!k)throw new Error('Add API key in Settings for AI features.');if(pv==='openai'){var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:s},{role:'user',content:p}],temperature:0.2,max_tokens:1500})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).choices[0].message.content;}else{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:s,messages:[{role:'user',content:p}]})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).content[0].text;}}
+
+async function interpretPlan(){
+  var text=document.getElementById('planText').value.trim();
+  if(!text){alert('Paste your comp plan text.');return;}
+  var out=document.getElementById('aiOutput');
+  out.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:12px;color:var(--text2)">Reading comp plan...</div></div>';
+
+  var sys='Extract compensation plan parameters from text. Return exact JSON (no markdown):\n{"quota":1000000,"baseRate":10,"accelThresh":100,"accelRate":15,"decelThresh":50,"decelRate":5,"spif":0,"notes":"Anything the calculator doesn\'t handle"}\nAll rates as percentages (10 = 10%). Thresholds as percentage of quota. Use null for unspecified values.';
+  try{
+    var raw=await callAI(text,sys);
+    var p;try{p=JSON.parse(raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}catch(e){var m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else throw new Error('Parse error.');}
+    if(p.quota)document.getElementById('quota').value=p.quota;
+    if(p.baseRate)document.getElementById('baseRate').value=p.baseRate;
+    if(p.accelThresh)document.getElementById('accelThresh').value=p.accelThresh;
+    if(p.accelRate)document.getElementById('accelRate').value=p.accelRate;
+    if(p.decelThresh)document.getElementById('decelThresh').value=p.decelThresh;
+    if(p.decelRate)document.getElementById('decelRate').value=p.decelRate;
+    if(p.spif)document.getElementById('spif').value=p.spif;
+    calc();
+    out.innerHTML='<div style="color:var(--green);font-size:12px">✓ Plan extracted and applied to calculator.'+(p.notes?' <span style="color:var(--text3)">Note: '+p.notes+'</span>':'')+'</div>';
+  }catch(e){out.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+}
+
+lS();calc();
+</script>
+</body>
+</html>

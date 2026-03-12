@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Message Crafter</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080B12;--bg2:#0D1117;--bg3:#161B22;--accent:#0EA5E9;--accent-dim:rgba(14,165,233,0.08);--accent-bdr:rgba(14,165,233,0.2);--text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;--bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);--glass:rgba(230,237,243,0.02);--green:#3FB950;--red:#F85149;--yellow:#E3B341;--purple:#D2A8FF;--orange:#F0883E}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}.logo span{font-family:Georgia,serif;font-size:15px}
+.hbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}.hbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sett{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s}.sett.open{max-height:250px}
+.sg{padding:20px 28px;display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;max-width:640px}
+.sg label{font-size:12px;color:var(--text2)}.sg select,.sg input{background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:8px 12px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;outline:none}
+.ks{font-size:10px;font-family:monospace;margin-top:3px}.ks.ok{color:var(--green)}.ks.no{color:var(--red)}
+.container{max-width:960px;margin:0 auto;padding:28px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+textarea,select,input[type=text]{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:12px 14px;border-radius:10px;font-family:inherit;font-size:13px;resize:vertical;transition:border-color .2s}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--accent-bdr)}
+.hint{font-size:11px;color:var(--text3);margin-top:5px}
+.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.fg label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.gbtn{background:var(--accent);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;margin-top:12px}.gbtn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(14,165,233,0.2)}.gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.insights{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:18px 20px;margin-bottom:16px;animation:fadeUp .3s ease}
+.insights-title{font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.insight-item{display:flex;gap:8px;margin-bottom:6px;font-size:12px;color:var(--text2);line-height:1.5}.insight-item span{color:var(--accent);flex-shrink:0}
+.mcard{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:12px;animation:fadeUp .4s ease}
+.mcard-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--bdr)}
+.mcard-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.mcard-body{padding:16px 20px}
+.msg-text{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap}
+.char-count{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-top:1px solid var(--bdr)}
+.char-bar{flex:1;height:4px;border-radius:2px;background:var(--bg3);margin:0 12px;overflow:hidden}
+.char-fill{height:100%;border-radius:2px;transition:width .3s}
+.mcard-note{padding:10px 20px;border-top:1px solid var(--bdr);font-size:11px;color:var(--text3);line-height:1.5}
+.avoid-box{background:rgba(248,81,73,0.04);border:1px solid rgba(248,81,73,0.12);border-radius:12px;padding:16px 20px;margin-top:16px;animation:fadeUp .4s ease}
+.avoid-title{font-size:10px;color:var(--red);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.avoid-item{display:flex;gap:8px;margin-bottom:6px;font-size:12px;color:var(--text2);line-height:1.5}
+.voice-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:12px;animation:fadeUp .4s ease}
+.voice-hdr{padding:14px 20px;background:linear-gradient(135deg,rgba(14,165,233,0.06),rgba(210,168,255,0.04));border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.voice-body{padding:16px 20px;font-size:14px;line-height:1.8;color:var(--text);font-style:italic}
+.cpbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:10px;transition:all .2s}.cpbtn:hover{border-color:var(--accent);color:var(--accent)}
+.loading{text-align:center;padding:48px}.spinner{width:28px;height:28px;border:2.5px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:14px;border-radius:10px;font-size:13px;margin-top:16px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="logo"><div class="logo-mark">💬</div><span>LinkedIn Crafter</span></div><button class="hbtn" onclick="document.getElementById('sett').classList.toggle('open')">⚙ Settings</button></div>
+<div class="sett" id="sett"><div class="sg">
+<label>AI Provider</label><select id="provider" onchange="sS()"><option value="openai">OpenAI (GPT-4o)</option><option value="anthropic">Anthropic (Claude)</option></select>
+<label>API Key</label><div><input type="password" id="apiKey" placeholder="API key..." oninput="sS()"><div class="ks" id="keyStatus"></div></div>
+<label>Your Product</label><input type="text" id="productCtx" placeholder="e.g. AI revenue intelligence" oninput="sS()">
+<label>Your Name/Title</label><input type="text" id="senderCtx" placeholder="e.g. Sarah Chen, AE" oninput="sS()">
+</div></div>
+
+<div class="container">
+<div style="margin-bottom:20px">
+  <div class="sl">LinkedIn Profile Info</div>
+  <textarea id="profileInput" style="min-height:150px" placeholder="Paste info from their LinkedIn profile:&#10;&#10;• Name, headline, current role&#10;• Experience / career history&#10;• Recent posts or activity&#10;• Mutual connections&#10;• Education, certifications&#10;• Featured section content&#10;&#10;Copy-paste from their LinkedIn page — the AI will parse it."></textarea>
+  <div class="hint">More profile details = better personalization. Recent posts are gold.</div>
+</div>
+
+<div style="margin-bottom:16px">
+  <div class="sl">Additional Context <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div>
+  <input type="text" id="contextInput" placeholder="Mutual connection, shared event, their recent post topic, trigger event...">
+</div>
+
+<div class="opts">
+  <div class="fg"><label>Message Type</label><select id="msgType"><option value="connection" selected>Connection Request (300 char)</option><option value="inmail">InMail (1900 char)</option><option value="followup">Follow-up After Connect</option><option value="noreply">Follow-up — No Response</option><option value="voicenote">Voice Note Script (30 sec)</option><option value="referral">Referral Ask</option></select></div>
+  <div class="fg"><label>Tone</label><select id="tone"><option value="peer" selected>Peer-to-peer</option><option value="curious">Curious / Question-led</option><option value="direct">Direct</option><option value="warm">Warm / Friendly</option></select></div>
+  <div class="fg"><label>Goal</label><select id="goal"><option value="connect" selected>Start a conversation</option><option value="meeting">Get a meeting</option><option value="intro">Get an introduction</option><option value="engage">Build relationship</option></select></div>
+</div>
+
+<button class="gbtn" id="genBtn" onclick="generate()">Craft Messages</button>
+<div id="output" style="margin-top:28px"></div>
+</div>
+
+<script>
+(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='salesai-key-delivery'){document.getElementById('provider').value=e.data.provider;document.getElementById('apiKey').value=e.data.key;sS();uK();}});if(window.parent!==window){window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');setTimeout(()=>window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*'),100);}})();
+</script>
+<script>
+function sS(){try{localStorage.setItem('salesai_linkedin',JSON.stringify({provider:document.getElementById('provider').value,apiKey:document.getElementById('apiKey').value,product:document.getElementById('productCtx').value,sender:document.getElementById('senderCtx').value}));}catch(e){}uK();}
+function lS(){try{var s=JSON.parse(localStorage.getItem('salesai_linkedin')||'{}');if(s.provider)document.getElementById('provider').value=s.provider;if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;if(s.product)document.getElementById('productCtx').value=s.product;if(s.sender)document.getElementById('senderCtx').value=s.sender;}catch(e){}uK();}
+function uK(){var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');el.className=k?'ks ok':'ks no';el.textContent=k?'✓ Key saved':'⚠ No API key';}
+function saveSettings(){sS();}function updateKeyStatus(){uK();}
+
+async function callAI(p,s){var pv=document.getElementById('provider').value,k=document.getElementById('apiKey').value;if(!k)throw new Error('Add API key in Settings.');if(pv==='openai'){var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:s},{role:'user',content:p}],temperature:0.8,max_tokens:3000})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).choices[0].message.content;}else{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,system:s,messages:[{role:'user',content:p}]})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).content[0].text;}}
+function pJ(r){try{return JSON.parse(r.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}catch(e){var m=r.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('Parse error.');}}
+
+async function generate(){
+  var profile=document.getElementById('profileInput').value.trim();
+  if(!profile){alert('Paste LinkedIn profile info.');return;}
+  var context=document.getElementById('contextInput').value.trim();
+  var msgType=document.getElementById('msgType').value;
+  var tone=document.getElementById('tone').value;
+  var goal=document.getElementById('goal').value;
+  var product=document.getElementById('productCtx').value||'[not set]';
+  var sender=document.getElementById('senderCtx').value||'[not set]';
+
+  var charLimits={connection:300,inmail:1900,followup:1900,noreply:1900,voicenote:0,referral:1900};
+  var charLimit=charLimits[msgType]||300;
+  var isVoice=msgType==='voicenote';
+
+  var btn=document.getElementById('genBtn'),out=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Crafting...';
+  out.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:13px;color:var(--text2)">Parsing profile, finding hooks, writing messages...</div></div>';
+
+  var sys='You are a LinkedIn outreach expert. Generate messages that feel like genuine human connections, not sales automation.\n\nSender: '+sender+', selling '+product+'\nMessage type: '+msgType+' (char limit: '+(charLimit||'N/A — this is a voice note script')+')\nTone: '+tone+'\nGoal: '+goal+'\n'+(context?'Additional context: '+context+'\n':'')+'\nRespond in exact JSON:\n{\n  "profile_insights": {\n    "key_hooks": ["3 things from their profile worth referencing"],\n    "shared_ground": "Any mutual connections, experiences, interests",\n    "recent_activity": "Recent posts or activity worth mentioning"\n  },\n  "messages": [\n    {\n      "label": "Variant A — [2-word strategy name]",\n      "message": "The message text",\n      "char_count": 142,\n      "strategy_note": "Why this angle works (1 sentence)",\n      "hook_used": "Which profile element was referenced"\n    },\n    {\n      "label": "Variant B — [different strategy]",\n      "message": "Different hook entirely",\n      "char_count": 156,\n      "strategy_note": "Why this angle works",\n      "hook_used": "Different element"\n    },\n    {\n      "label": "Variant C — [third strategy]",\n      "message": "Third distinct approach",\n      "char_count": 148,\n      "strategy_note": "Why this works",\n      "hook_used": "Third element"\n    }\n  ]'+(isVoice?',\n  "voice_note_script": {\n    "script": "A natural 20-30 second spoken script. Conversational, not read-from-paper.",\n    "duration_estimate": "~25 seconds",\n    "delivery_tips": "How to deliver it naturally"\n  }':'')+',\n  "avoid": [\n    {"what": "Thing not to say", "why": "Why it would hurt with this person"}\n  ]\n}\n\nGenerate 3 message variants. Rules:\n- STRICT char limit for connection requests: 300 characters. Count carefully.\n- Each variant uses a DIFFERENT personalization hook\n- Never start with "Hi [Name], I noticed..." — too generic\n- No "I\'d love to pick your brain" or "I\'d love to connect"\n- End with something that invites natural reply, not a sales CTA\n'+(isVoice?'- Voice note should sound conversational, like talking to a friend, not reading a script\n- Include natural pauses and filler words for authenticity\n':'');
+
+  try{
+    var raw=await callAI('Profile info:\n\n'+profile,sys);
+    var p=pJ(raw);window._msgs=p;
+    var h='';
+
+    // Insights
+    if(p.profile_insights){
+      var ins=p.profile_insights;
+      h+='<div class="insights"><div class="insights-title">Profile Insights</div>';
+      if(ins.key_hooks)ins.key_hooks.forEach(function(k){h+='<div class="insight-item"><span>🎣</span>'+k+'</div>';});
+      if(ins.shared_ground)h+='<div class="insight-item"><span>🤝</span>'+ins.shared_ground+'</div>';
+      if(ins.recent_activity)h+='<div class="insight-item"><span>📢</span>'+ins.recent_activity+'</div>';
+      h+='</div>';
+    }
+
+    // Message cards
+    p.messages.forEach(function(m,i){
+      var pct=charLimit>0?Math.round(m.char_count/charLimit*100):0;
+      var barColor=pct>100?'var(--red)':pct>90?'var(--yellow)':'var(--green)';
+      h+='<div class="mcard"><div class="mcard-hdr"><span class="mcard-label" style="color:var(--accent)">'+m.label+'</span><button class="cpbtn" onclick="copyMsg('+i+',this)">Copy</button></div>';
+      h+='<div class="mcard-body"><div class="msg-text" id="msg'+i+'">'+m.message+'</div></div>';
+      if(charLimit>0){
+        h+='<div class="char-count"><span style="font-size:11px;color:'+(pct>100?'var(--red)':'var(--text3)')+'">'+m.char_count+' / '+charLimit+'</span><div class="char-bar"><div class="char-fill" style="width:'+Math.min(pct,100)+'%;background:'+barColor+'"></div></div><span style="font-size:10px;color:'+barColor+'">'+pct+'%</span></div>';
+      }
+      h+='<div class="mcard-note">💡 <strong style="color:var(--text2)">Strategy:</strong> '+m.strategy_note+' <span style="color:var(--accent)">| Hook:</span> '+m.hook_used+'</div>';
+      h+='</div>';
+    });
+
+    // Voice note
+    if(isVoice&&p.voice_note_script){
+      var vn=p.voice_note_script;
+      h+='<div class="voice-card"><div class="voice-hdr"><div><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--purple)">🎤 Voice Note Script</span><span style="font-size:11px;color:var(--text3);margin-left:8px">'+vn.duration_estimate+'</span></div><button class="cpbtn" onclick="navigator.clipboard.writeText(window._msgs.voice_note_script.script);this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy\',1500)">Copy</button></div>';
+      h+='<div class="voice-body">"'+vn.script+'"</div>';
+      if(vn.delivery_tips)h+='<div style="padding:10px 20px;border-top:1px solid var(--bdr);font-size:11px;color:var(--text3)">🎯 '+vn.delivery_tips+'</div>';
+      h+='</div>';
+    }
+
+    // Avoid section
+    if(p.avoid&&p.avoid.length){
+      h+='<div class="avoid-box"><div class="avoid-title">⚠ What NOT to Say</div>';
+      p.avoid.forEach(function(a){h+='<div class="avoid-item"><span style="color:var(--red)">✗</span><div><strong style="color:var(--text)">'+a.what+'</strong><br>'+a.why+'</div></div>';});
+      h+='</div>';
+    }
+    out.innerHTML=h;
+  }catch(e){out.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='Craft Messages';
+}
+function copyMsg(i,btn){var m=window._msgs.messages[i];navigator.clipboard.writeText(m.message);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);}
+lS();
+</script>
+</body>
+</html>

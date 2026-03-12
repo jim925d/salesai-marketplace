@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discovery Question Generator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080B12;--bg2:#0D1117;--bg3:#161B22;--accent:#F59E0B;--accent-dim:rgba(245,158,11,0.08);--accent-bdr:rgba(245,158,11,0.2);--text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;--bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);--glass:rgba(230,237,243,0.02);--green:#3FB950;--red:#F85149;--yellow:#E3B341;--blue:#58A6FF;--purple:#D2A8FF;--orange:#F0883E}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}.logo span{font-family:Georgia,serif;font-size:15px}
+.hbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}.hbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sett{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s}.sett.open{max-height:300px}
+.sg{padding:20px 28px;display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;max-width:640px}
+.sg label{font-size:12px;color:var(--text2)}.sg select,.sg input,.sg textarea{background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:8px 12px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;outline:none;resize:vertical}
+.ks{font-size:10px;font-family:monospace;margin-top:3px}.ks.ok{color:var(--green)}.ks.no{color:var(--red)}
+.container{max-width:960px;margin:0 auto;padding:28px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+select,input[type=text],textarea{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:12px 14px;border-radius:10px;font-family:inherit;font-size:13px;resize:vertical}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--accent-bdr)}
+.hint{font-size:11px;color:var(--text3);margin-top:5px}
+.opts{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.fg label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.gbtn{background:var(--accent);color:#000;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;margin-top:12px}.gbtn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(245,158,11,0.2)}.gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+/* Phases */
+.phase{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:12px;animation:fadeUp .4s ease}
+.phase-hdr{padding:14px 18px;background:var(--bg3);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.phase-hdr:hover{background:rgba(230,237,243,0.04)}
+.phase-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.phase-meta{display:flex;gap:8px;align-items:center}
+.phase-duration{font-size:10px;color:var(--text3);background:var(--glass);padding:2px 8px;border-radius:4px}
+.phase-count{font-size:10px;color:var(--accent);font-weight:600}
+.phase-body{padding:14px 18px}
+.q-card{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:14px;margin-bottom:8px;transition:border-color .2s}
+.q-card:hover{border-color:var(--bdr-h)}
+.q-text{font-size:14px;font-weight:500;color:var(--text);line-height:1.5;margin-bottom:8px}
+.q-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.q-detail{font-size:11px;line-height:1.5}
+.q-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:2px}
+.fw-tag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-bdr)}
+/* Summary */
+.summary-bar{display:flex;gap:12px;margin-bottom:20px}
+.sum-stat{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 16px;text-align:center;flex:1}
+.sum-val{font-family:Georgia,serif;font-size:22px;letter-spacing:-0.5px}
+.sum-label{font-size:10px;color:var(--text3);margin-top:2px}
+/* Prep checklist */
+.prep{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px 18px;margin-bottom:14px;animation:fadeUp .4s ease}
+.prep-title{font-size:10px;color:var(--green);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.prep-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--text2);cursor:pointer}
+.prep-item input[type=checkbox]{accent-color:var(--accent);margin:0}
+.prep-item.checked{text-decoration:line-through;color:var(--text3)}
+.cpbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:10px;transition:all .2s}.cpbtn:hover{border-color:var(--accent);color:var(--accent)}
+.loading{text-align:center;padding:48px}.spinner{width:28px;height:28px;border:2.5px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:14px;border-radius:10px;font-size:13px;margin-top:16px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="logo"><div class="logo-mark">❓</div><span>Discovery Questions</span></div><button class="hbtn" onclick="document.getElementById('sett').classList.toggle('open')">⚙ Settings</button></div>
+<div class="sett" id="sett"><div class="sg">
+<label>AI Provider</label><select id="provider" onchange="sS()"><option value="openai">OpenAI (GPT-4o)</option><option value="anthropic">Anthropic (Claude)</option></select>
+<label>API Key</label><div><input type="password" id="apiKey" placeholder="API key..." oninput="sS()"><div class="ks" id="keyStatus"></div></div>
+<label>Your Product</label><input type="text" id="productCtx" placeholder="e.g. AI revenue intelligence" oninput="sS()">
+<label>Custom Playbook</label><textarea id="playbookCtx" placeholder="Optional: paste your team's specific questions or methodology notes" oninput="sS()" style="min-height:48px"></textarea>
+</div></div>
+
+<div class="container">
+<div class="opts">
+  <div class="fg"><label>Industry</label><select id="industry"><option value="saas">SaaS / Software</option><option value="fintech">Fintech</option><option value="healthcare">Healthcare</option><option value="ecommerce">E-commerce</option><option value="manufacturing">Manufacturing</option><option value="media">Media / Publishing</option><option value="education">Education</option><option value="other">Other</option></select></div>
+  <div class="fg"><label>Buyer Persona</label><select id="persona"><option value="cro">CRO / VP Sales</option><option value="cmo">CMO / VP Marketing</option><option value="cto">CTO / VP Engineering</option><option value="cfo">CFO / VP Finance</option><option value="coo">COO / VP Operations</option><option value="it">IT / Security</option><option value="general">General / Unknown</option></select></div>
+  <div class="fg"><label>Deal Stage</label><select id="stage"><option value="first" selected>First Meeting</option><option value="deep">Deep Discovery</option><option value="eval">Evaluation</option><option value="proposal">Proposal / Negotiation</option></select></div>
+  <div class="fg"><label>Framework</label><select id="framework"><option value="meddic" selected>MEDDIC</option><option value="spin">SPIN Selling</option><option value="challenger">Challenger</option><option value="sandler">Sandler</option><option value="custom">Custom / None</option></select></div>
+</div>
+
+<div style="margin-bottom:16px">
+  <div class="sl">Additional Context <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div>
+  <input type="text" id="contextInput" placeholder="e.g. They mentioned data migration concerns, they use Competitor X, recently acquired a company">
+</div>
+
+<button class="gbtn" id="genBtn" onclick="generate()">Generate Discovery Plan</button>
+<div id="output" style="margin-top:28px"></div>
+</div>
+
+<script>
+(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='salesai-key-delivery'){document.getElementById('provider').value=e.data.provider;document.getElementById('apiKey').value=e.data.key;sS();uK();}});if(window.parent!==window){window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');setTimeout(()=>window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*'),100);}})();
+</script>
+<script>
+function sS(){try{localStorage.setItem('salesai_discovery',JSON.stringify({provider:document.getElementById('provider').value,apiKey:document.getElementById('apiKey').value,product:document.getElementById('productCtx').value,playbook:document.getElementById('playbookCtx').value}));}catch(e){}uK();}
+function lS(){try{var s=JSON.parse(localStorage.getItem('salesai_discovery')||'{}');if(s.provider)document.getElementById('provider').value=s.provider;if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;if(s.product)document.getElementById('productCtx').value=s.product;if(s.playbook)document.getElementById('playbookCtx').value=s.playbook;}catch(e){}uK();}
+function uK(){var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');el.className=k?'ks ok':'ks no';el.textContent=k?'✓ Key saved':'⚠ No API key';}
+function saveSettings(){sS();}function updateKeyStatus(){uK();}
+async function callAI(p,s){var pv=document.getElementById('provider').value,k=document.getElementById('apiKey').value;if(!k)throw new Error('Add API key.');if(pv==='openai'){var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:s},{role:'user',content:p}],temperature:0.7,max_tokens:4000})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).choices[0].message.content;}else{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:s,messages:[{role:'user',content:p}]})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).content[0].text;}}
+function pJ(r){try{return JSON.parse(r.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}catch(e){var m=r.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('Parse error.');}}
+
+async function generate(){
+  var industry=document.getElementById('industry').value;
+  var persona=document.getElementById('persona').value;
+  var stage=document.getElementById('stage').value;
+  var framework=document.getElementById('framework').value;
+  var context=document.getElementById('contextInput').value;
+  var product=document.getElementById('productCtx').value||'[not set]';
+  var playbook=document.getElementById('playbookCtx').value||'';
+
+  var btn=document.getElementById('genBtn'),out=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Generating...';
+  out.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:13px;color:var(--text2)">Building conversation plan with '+framework.toUpperCase()+' framework...</div></div>';
+
+  var fwNames={meddic:'MEDDIC',spin:'SPIN Selling',challenger:'Challenger',sandler:'Sandler',custom:'Custom'};
+
+  var sys='You are an elite sales coach. Generate a structured discovery conversation plan.\n\nProduct: '+product+'\nMethodology: '+fwNames[framework]+'\nIndustry: '+industry+'\nBuyer persona: '+persona+'\nDeal stage: '+stage+'\n'+(context?'Additional context: '+context+'\n':'')+(playbook?'Custom playbook notes: '+playbook+'\n':'')+'\nRespond in exact JSON:\n{"conversation_arc":[{"phase":"Phase Name","duration":"X minutes","icon":"emoji","questions":[{"question":"The actual question","why_ask":"What intelligence this gathers (1 sentence)","listen_for":"Specific signals in their answer","if_they_deflect":"How to handle a non-answer (1 sentence)","framework_tag":"'+fwNames[framework]+': Element Name"}]}],"meeting_prep":["Checklist items to prepare before the meeting"],"total_questions":14,"estimated_duration":"30-35 minutes"}\n\nGenerate 5 phases: Opening & Rapport, Current State & Pain, Impact & Metrics, Decision Process & Timeline, Next Steps & Close.\n\nRules:\n- 12-16 questions total across all phases\n- ALL questions must be open-ended (never yes/no)\n- Tailor to industry + persona + deal stage specifically\n- Every question must have deflection handling\n- Tag each question with the framework element\n- Natural flow — not an interrogation\n- Meeting prep should include 4-6 actionable items';
+
+  try{
+    var raw=await callAI('Generate a discovery plan for: '+industry+' industry, '+persona+' persona, '+stage+' stage',sys);
+    var p=pJ(raw);window._plan=p;
+    var h='';
+
+    // Summary bar
+    h+='<div class="summary-bar">';
+    h+='<div class="sum-stat"><div class="sum-val" style="color:var(--accent)">'+p.total_questions+'</div><div class="sum-label">Questions</div></div>';
+    h+='<div class="sum-stat"><div class="sum-val" style="color:var(--green)">'+p.estimated_duration+'</div><div class="sum-label">Duration</div></div>';
+    h+='<div class="sum-stat"><div class="sum-val" style="color:var(--purple)">'+p.conversation_arc.length+'</div><div class="sum-label">Phases</div></div>';
+    h+='<div class="sum-stat"><div class="sum-val" style="color:var(--blue)">'+fwNames[framework]+'</div><div class="sum-label">Framework</div></div>';
+    h+='</div>';
+
+    // Meeting prep
+    if(p.meeting_prep&&p.meeting_prep.length){
+      h+='<div class="prep"><div class="prep-title">✅ Meeting Prep Checklist</div>';
+      p.meeting_prep.forEach(function(item,i){
+        h+='<label class="prep-item" id="prep'+i+'" onclick="this.classList.toggle(\'checked\')"><input type="checkbox"> '+item+'</label>';
+      });
+      h+='</div>';
+    }
+
+    // Conversation phases
+    var phaseColors=['var(--blue)','var(--orange)','var(--accent)','var(--purple)','var(--green)'];
+    p.conversation_arc.forEach(function(phase,pi){
+      var qCount=phase.questions?phase.questions.length:0;
+      h+='<div class="phase" style="animation-delay:'+pi*0.08+'s">';
+      h+='<div class="phase-hdr" onclick="togglePhase('+pi+')">';
+      h+='<div class="phase-title"><span style="font-size:16px">'+(phase.icon||'💬')+'</span><span style="color:'+(phaseColors[pi]||'var(--accent)')+'">'+phase.phase+'</span></div>';
+      h+='<div class="phase-meta"><span class="phase-duration">'+phase.duration+'</span><span class="phase-count">'+qCount+' questions</span><span style="font-size:10px;color:var(--text3)" id="phaseArrow'+pi+'">▼</span></div>';
+      h+='</div>';
+      h+='<div class="phase-body" id="phaseBody'+pi+'">';
+
+      if(phase.questions){phase.questions.forEach(function(q,qi){
+        h+='<div class="q-card">';
+        h+='<div class="q-text">'+q.question+'</div>';
+        h+='<div class="q-meta">';
+        h+='<div><div class="q-label" style="color:var(--blue)">Why Ask</div><div class="q-detail" style="color:var(--text2)">'+q.why_ask+'</div></div>';
+        h+='<div><div class="q-label" style="color:var(--green)">Listen For</div><div class="q-detail" style="color:var(--green)">'+q.listen_for+'</div></div>';
+        h+='</div>';
+        h+='<div style="margin-top:8px;display:flex;align-items:start;gap:8px"><div style="flex:1"><div class="q-label" style="color:var(--orange)">If They Deflect</div><div class="q-detail" style="color:var(--orange)">'+q.if_they_deflect+'</div></div>';
+        if(q.framework_tag)h+='<span class="fw-tag">'+q.framework_tag+'</span>';
+        h+='</div></div>';
+      });}
+      h+='</div></div>';
+    });
+
+    // Copy all
+    h+='<button onclick="copyAll()" style="width:100%;padding:14px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .2s">📋 Copy All Questions</button>';
+
+    out.innerHTML=h;
+  }catch(e){out.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='Generate Discovery Plan';
+}
+
+function togglePhase(i){
+  var body=document.getElementById('phaseBody'+i);
+  var arrow=document.getElementById('phaseArrow'+i);
+  if(body.style.display==='none'){body.style.display='block';arrow.textContent='▼';}
+  else{body.style.display='none';arrow.textContent='▶';}
+}
+
+function copyAll(){
+  var p=window._plan;if(!p)return;
+  var text=p.conversation_arc.map(function(phase){
+    var lines=phase.phase+' ('+phase.duration+')\n';
+    if(phase.questions)phase.questions.forEach(function(q,i){
+      lines+=(i+1)+'. '+q.question+'\n   Listen for: '+q.listen_for+'\n   If deflected: '+q.if_they_deflect+'\n';
+    });
+    return lines;
+  }).join('\n');
+  navigator.clipboard.writeText(text);
+}
+lS();
+</script>
+</body>
+</html>

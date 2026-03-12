@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Briefing Builder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080B12;--bg2:#0D1117;--bg3:#161B22;--accent:#EC4899;--accent-dim:rgba(236,72,153,0.08);--accent-bdr:rgba(236,72,153,0.2);--text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;--bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);--glass:rgba(230,237,243,0.02);--green:#3FB950;--red:#F85149;--yellow:#E3B341;--blue:#58A6FF;--purple:#D2A8FF;--orange:#F0883E}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}.logo span{font-family:Georgia,serif;font-size:15px}
+.hbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}.hbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sett{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s}.sett.open{max-height:300px}
+.sg{padding:20px 28px;display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;max-width:640px}
+.sg label{font-size:12px;color:var(--text2)}.sg select,.sg input,.sg textarea{background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:8px 12px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;outline:none;resize:vertical}
+.ks{font-size:10px;font-family:monospace;margin-top:3px}.ks.ok{color:var(--green)}.ks.no{color:var(--red)}
+.container{max-width:960px;margin:0 auto;padding:28px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+textarea,select,input[type=text]{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:12px 14px;border-radius:10px;font-family:inherit;font-size:13px;resize:vertical}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--accent-bdr)}
+.hint{font-size:11px;color:var(--text3);margin-top:5px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.fg label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.gbtn{background:var(--accent);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;margin-top:12px}.gbtn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(236,72,153,0.2)}.gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.brief-section{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:14px;animation:fadeUp .4s ease}
+.brief-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--bg3);border-bottom:1px solid var(--bdr)}
+.brief-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.brief-body{padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text2);white-space:pre-wrap}
+.facts-row{display:flex;gap:8px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--bdr)}
+.fact{background:var(--glass);border:1px solid var(--bdr);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--text2)}
+.fact strong{color:var(--text);font-weight:600}
+.person-card{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:8px}
+.risk-item{display:flex;align-items:start;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)}.risk-item:last-child{border:none}
+.risk-level{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;text-transform:uppercase;flex-shrink:0;margin-top:2px}
+.track-card{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:14px;margin-bottom:8px}
+.track-topic{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px}
+.question-item{display:flex;gap:8px;padding:6px 0;font-size:13px;color:var(--text2);line-height:1.5}
+.question-item span{color:var(--accent);font-family:Georgia,serif;font-weight:700;flex-shrink:0}
+.tech-tag{font-size:10px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-bdr);padding:2px 8px;border-radius:4px;display:inline-block;margin:2px}
+.cpbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:10px;transition:all .2s}.cpbtn:hover{border-color:var(--accent);color:var(--accent)}
+.loading{text-align:center;padding:48px}.spinner{width:28px;height:28px;border:2.5px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:14px;border-radius:10px;font-size:13px;margin-top:16px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="logo"><div class="logo-mark">📊</div><span>Account Briefing</span></div><button class="hbtn" onclick="document.getElementById('sett').classList.toggle('open')">⚙ Settings</button></div>
+<div class="sett" id="sett"><div class="sg">
+<label>AI Provider</label><select id="provider" onchange="sS()"><option value="openai">OpenAI (GPT-4o)</option><option value="anthropic">Anthropic (Claude)</option></select>
+<label>API Key</label><div><input type="password" id="apiKey" placeholder="API key..." oninput="sS()"><div class="ks" id="keyStatus"></div></div>
+<label>Your Product</label><input type="text" id="productCtx" placeholder="e.g. AI revenue intelligence" oninput="sS()">
+<label>Differentiators</label><textarea id="diffCtx" placeholder="What makes you different from competitors" oninput="sS()" style="min-height:36px"></textarea>
+<label>Competitors</label><input type="text" id="compCtx" placeholder="Competitor A, Competitor B (comma-separated)" oninput="sS()">
+</div></div>
+
+<div class="container">
+<div style="margin-bottom:16px">
+  <div class="sl">Company Information</div>
+  <textarea id="companyInput" style="min-height:140px" placeholder="Paste any company info you have:&#10;&#10;• Website About page&#10;• LinkedIn company page&#10;• Crunchbase profile&#10;• Recent news articles&#10;• Annual report excerpts&#10;• Glassdoor reviews&#10;&#10;More sources = better briefing."></textarea>
+  <div class="hint">Copy-paste from multiple sources. The AI synthesizes everything into one briefing.</div>
+</div>
+
+<div class="opts">
+  <div class="fg"><label>Meeting With (name + role)</label><input type="text" id="meetingWith" placeholder="e.g. Sarah Kim, CRO"></div>
+  <div class="fg"><label>Meeting Purpose</label><select id="meetingPurpose"><option value="discovery">Discovery / First Meeting</option><option value="demo">Demo / Presentation</option><option value="negotiation">Negotiation</option><option value="exec">Executive Briefing</option><option value="renewal">Renewal / QBR</option></select></div>
+</div>
+
+<div style="margin-bottom:16px">
+  <div class="sl">Prior Context <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div>
+  <textarea id="priorCtx" style="min-height:60px" placeholder="Any prior deal context: previous meetings, champion insights, known concerns..."></textarea>
+</div>
+
+<button class="gbtn" id="genBtn" onclick="generate()">Build Account Briefing</button>
+<div id="output" style="margin-top:28px"></div>
+</div>
+
+<script>
+(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='salesai-key-delivery'){document.getElementById('provider').value=e.data.provider;document.getElementById('apiKey').value=e.data.key;sS();uK();}});if(window.parent!==window){window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');setTimeout(()=>window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*'),100);}})();
+</script>
+<script>
+function sS(){try{localStorage.setItem('salesai_briefing',JSON.stringify({provider:document.getElementById('provider').value,apiKey:document.getElementById('apiKey').value,product:document.getElementById('productCtx').value,diff:document.getElementById('diffCtx').value,comp:document.getElementById('compCtx').value}));}catch(e){}uK();}
+function lS(){try{var s=JSON.parse(localStorage.getItem('salesai_briefing')||'{}');if(s.provider)document.getElementById('provider').value=s.provider;if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;if(s.product)document.getElementById('productCtx').value=s.product;if(s.diff)document.getElementById('diffCtx').value=s.diff;if(s.comp)document.getElementById('compCtx').value=s.comp;}catch(e){}uK();}
+function uK(){var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');el.className=k?'ks ok':'ks no';el.textContent=k?'✓ Key saved':'⚠ No API key';}
+function saveSettings(){sS();}function updateKeyStatus(){uK();}
+async function callAI(p,s){var pv=document.getElementById('provider').value,k=document.getElementById('apiKey').value;if(!k)throw new Error('Add API key.');if(pv==='openai'){var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:s},{role:'user',content:p}],temperature:0.3,max_tokens:4000})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).choices[0].message.content;}else{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:s,messages:[{role:'user',content:p}]})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).content[0].text;}}
+function pJ(r){try{return JSON.parse(r.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}catch(e){var m=r.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('Parse error.');}}
+
+async function generate(){
+  var info=document.getElementById('companyInput').value.trim();
+  if(!info){alert('Enter company info.');return;}
+  var meetingWith=document.getElementById('meetingWith').value;
+  var purpose=document.getElementById('meetingPurpose').value;
+  var prior=document.getElementById('priorCtx').value;
+  var product=document.getElementById('productCtx').value||'[not set]';
+  var diff=document.getElementById('diffCtx').value||'[not set]';
+  var comp=document.getElementById('compCtx').value||'[none listed]';
+
+  var btn=document.getElementById('genBtn'),out=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Building briefing...';
+  out.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:13px;color:var(--text2)">Analyzing company, building talk tracks, assessing risks...</div></div>';
+
+  var sys='Create a comprehensive pre-meeting account briefing.\n\nOur product: '+product+'\nDifferentiators: '+diff+'\nCompetitors: '+comp+'\nMeeting with: '+(meetingWith||'[not specified]')+'\nMeeting purpose: '+purpose+'\n'+(prior?'Prior context: '+prior+'\n':'')+'\nRespond in exact JSON:\n{"company":{"name":"...","tagline":"One-line what they do","industry":"...","founded":"...","hq":"...","employees":"...","revenue":"...","funding":"..."},"overview":"3-4 paragraph narrative","key_people":[{"name":"...","title":"...","relevance":"Why they matter to your deal","talking_point":"Something specific to mention"}],"competitive_landscape":{"competitors_detected":["names"],"our_advantages":["3 specific advantages"],"landmines":["Topics to avoid that favor competitors"],"positioning":"How to position us"},"risk_radar":[{"risk":"Risk name","level":"high|medium|low","mitigation":"What to do"}],"talk_tracks":[{"topic":"Topic name","what_to_say":"Script","why":"Reasoning"}],"key_questions":["5 most important questions"],"recent_news":"Notable recent developments","tech_stack":["Known or likely technologies"]}\n\nRules:\n- Tailor talk tracks to the specific person and meeting purpose\n- Risk radar should include deal-specific risks (single-threaded, no champion, etc.)\n- Key questions should be discovery-oriented for the meeting purpose\n- Be specific, not generic';
+
+  try{
+    var raw=await callAI('Build a briefing for this company:\n\n'+info,sys);
+    var p=pJ(raw);window._brief=p;
+    var h='';
+
+    // Company header
+    var c=p.company;
+    h+='<div class="brief-section"><div class="brief-hdr"><span class="brief-title" style="color:var(--accent)">'+c.name+'</span><span style="font-size:12px;color:var(--text3)">'+c.tagline+'</span></div>';
+    h+='<div class="facts-row">';
+    [['Industry',c.industry],['Founded',c.founded],['HQ',c.hq],['Employees',c.employees],['Revenue',c.revenue],['Funding',c.funding]].forEach(function(f){if(f[1])h+='<div class="fact"><strong>'+f[0]+':</strong> '+f[1]+'</div>';});
+    h+='</div><div class="brief-body">'+p.overview+'</div></div>';
+
+    // Key people
+    if(p.key_people&&p.key_people.length){
+      h+='<div class="brief-section"><div class="brief-hdr"><span class="brief-title" style="color:var(--blue)">Key People</span></div><div style="padding:14px 18px">';
+      p.key_people.forEach(function(kp){h+='<div class="person-card"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><strong style="font-size:13px">'+kp.name+'</strong><span style="font-size:11px;color:var(--text3)">'+kp.title+'</span></div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">'+kp.relevance+'</div><div style="font-size:11px;color:var(--accent)">💬 '+kp.talking_point+'</div></div>';});
+      h+='</div></div>';
+    }
+
+    // Competitive landscape
+    if(p.competitive_landscape){
+      var cl=p.competitive_landscape;
+      h+='<div class="brief-section"><div class="brief-hdr"><span class="brief-title" style="color:var(--orange)">Competitive Positioning</span></div><div style="padding:14px 18px">';
+      if(cl.competitors_detected&&cl.competitors_detected.length){h+='<div style="margin-bottom:10px">Competitors: ';cl.competitors_detected.forEach(function(c){h+='<span style="font-size:10px;background:var(--orange)14;color:var(--orange);padding:2px 6px;border-radius:3px;margin-right:4px;font-weight:600">'+c+'</span>';});h+='</div>';}
+      if(cl.our_advantages){h+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--green);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Our Advantages</div>';cl.our_advantages.forEach(function(a){h+='<div style="font-size:12px;color:var(--text2);margin-bottom:3px;display:flex;gap:6px"><span style="color:var(--green)">✓</span>'+a+'</div>';});h+='</div>';}
+      if(cl.landmines&&cl.landmines.length){h+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--red);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Landmines to Avoid</div>';cl.landmines.forEach(function(l){h+='<div style="font-size:12px;color:var(--text2);margin-bottom:3px;display:flex;gap:6px"><span style="color:var(--red)">⚠</span>'+l+'</div>';});h+='</div>';}
+      if(cl.positioning)h+='<div style="font-size:13px;color:var(--text2);padding:10px;background:var(--glass);border-radius:8px;border:1px solid var(--bdr)"><strong style="color:var(--accent)">Position as:</strong> '+cl.positioning+'</div>';
+      h+='</div></div>';
+    }
+
+    // Risk radar
+    if(p.risk_radar&&p.risk_radar.length){
+      h+='<div class="brief-section"><div class="brief-hdr"><span class="brief-title" style="color:var(--red)">Risk Radar</span></div><div style="padding:14px 18px">';
+      p.risk_radar.forEach(function(r){var col=r.level==='high'?'var(--red)':r.level==='medium'?'var(--yellow)':'var(--green)';h+='<div class="risk-item"><span class="risk-level" style="background:'+col+'14;color:'+col+'">'+r.level+'</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">'+r.risk+'</div><div style="font-size:12px;color:var(--text3);margin-top:2px">→ '+r.mitigation+'</div></div></div>';});
+      h+='</div></div>';
+    }
+
+    // Talk tracks
+    if(p.talk_tracks&&p.talk_tracks.length){
+      h+='<div class="brief-section"><div class="brief-hdr"><span class="brief-title" style="color:var(--purple)">Talk Tracks</span></div><div style="padding:14px 18px">';
+      p.talk_tracks.forEach(function(t){h+='<div class="track-card"><div class="track-topic">'+t.topic+'</div><div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:6px">'+t.what_to_say+'</div><div style="font-size:11px;color:var(--text3);font-style:italic">Why: '+t.why+'</div></div>';});
+      h+='</div></div>';
+    }
+
+    // Key questions
+    if(p.key_questions&&p.key_questions.length){
+      h+='<div class="brief-section"><div class="brief-hdr"><span class="brief-title" style="color:var(--accent)">Key Questions to Ask</span></div><div style="padding:14px 18px">';
+      p.key_questions.forEach(function(q,i){h+='<div class="question-item"><span>'+(i+1)+'.</span>'+q+'</div>';});
+      h+='</div></div>';
+    }
+
+    // Tech stack + News
+    var extras='';
+    if(p.tech_stack&&p.tech_stack.length){extras+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600">Tech Stack</div>';p.tech_stack.forEach(function(t){extras+='<span class="tech-tag">'+t+'</span>';});extras+='</div>';}
+    if(p.recent_news)extras+='<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600">Recent News</div><div style="font-size:12px;color:var(--text2);line-height:1.6">'+p.recent_news+'</div></div>';
+    if(extras)h+='<div class="brief-section"><div class="brief-hdr"><span class="brief-title" style="color:var(--text3)">Additional Intel</span></div><div style="padding:14px 18px">'+extras+'</div></div>';
+
+    // Copy all
+    h+='<button onclick="copyBrief()" style="width:100%;padding:14px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .2s">📋 Copy Full Briefing</button>';
+
+    out.innerHTML=h;
+  }catch(e){out.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='Build Account Briefing';
+}
+function copyBrief(){
+  var p=window._brief;if(!p)return;
+  var c=p.company;
+  var text=c.name+' — Account Briefing\n'+c.tagline+'\n\n';
+  text+='COMPANY: '+[c.industry,c.employees,c.hq,c.funding].filter(Boolean).join(' | ')+'\n\n';
+  text+=p.overview+'\n\n';
+  if(p.key_questions)text+='KEY QUESTIONS:\n'+p.key_questions.map((q,i)=>(i+1)+'. '+q).join('\n')+'\n\n';
+  if(p.talk_tracks)text+='TALK TRACKS:\n'+p.talk_tracks.map(t=>t.topic+': '+t.what_to_say).join('\n\n');
+  navigator.clipboard.writeText(text);
+}
+lS();
+</script>
+</body>
+</html>

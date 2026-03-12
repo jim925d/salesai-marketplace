@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Objection Response Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080B12;--bg2:#0D1117;--bg3:#161B22;
+  --accent:#E8976C;--accent-dim:rgba(232,151,108,0.08);--accent-bdr:rgba(232,151,108,0.2);
+  --text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;
+  --bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);
+  --glass:rgba(230,237,243,0.02);
+  --green:#3FB950;--blue:#58A6FF;--purple:#D2A8FF;--red:#F85149;--yellow:#E3B341;
+}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+
+/* Grain */
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Layout */
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo span{font-family:Georgia,serif;font-size:15px;letter-spacing:-0.3px}
+.settings-toggle{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all .2s}
+.settings-toggle:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Settings panel */
+.settings{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s ease}
+.settings.open{max-height:320px}
+.settings-inner{padding:20px 28px;display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:start;max-width:640px}
+.settings-inner label{font-size:12px;color:var(--text2);padding-top:8px}
+.settings-inner select,.settings-inner input,.settings-inner textarea{background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:8px 12px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;outline:none}
+.settings-inner textarea{min-height:48px;resize:vertical}
+.settings-inner select:focus,.settings-inner input:focus,.settings-inner textarea:focus{border-color:var(--accent-bdr)}
+.key-status{font-size:10px;font-family:'JetBrains Mono',monospace;margin-top:3px}
+.key-status.ok{color:var(--green)}.key-status.no{color:var(--red)}
+
+/* Main content */
+.container{max-width:920px;margin:0 auto;padding:28px}
+.section-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+
+/* Input areas */
+textarea,select,input[type="text"]{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:14px 16px;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;transition:border-color .2s}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--accent-bdr);box-shadow:0 0 0 3px rgba(232,151,108,0.08)}
+.thread-input{min-height:180px;font-size:13px;line-height:1.7}
+.input-hint{font-size:11px;color:var(--text3);margin-top:6px}
+
+/* Negotiation tactics */
+.tactics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:20px}
+.tactic{background:var(--glass);border:1px solid var(--bdr);border-radius:9px;padding:12px 14px;cursor:pointer;transition:all .2s;user-select:none}
+.tactic:hover{border-color:var(--bdr-h);background:rgba(230,237,243,0.04)}
+.tactic.active{background:var(--accent-dim);border-color:var(--accent-bdr)}
+.tactic-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.tactic-name .dot{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:background .2s}
+.tactic.active .dot{background:var(--accent)}
+.tactic-desc{font-size:10px;color:var(--text3);line-height:1.4}
+
+/* Tone & context row */
+.options-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.form-group{margin-bottom:0}
+.form-group label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;font-weight:500}
+
+/* Generate button */
+.gen-btn{background:var(--accent);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;letter-spacing:0.2px}
+.gen-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(232,151,108,0.25)}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* Analysis panel */
+.analysis{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:20px;margin-bottom:20px;animation:fadeUp .4s ease}
+.analysis-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.analysis-title{font-family:Georgia,serif;font-size:18px;font-weight:400;letter-spacing:-0.5px}
+.analysis-badges{display:flex;gap:6px}
+.badge{font-size:9px;padding:3px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.analysis-item{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:12px}
+.analysis-item-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:4px;font-weight:600}
+.analysis-item-value{font-size:13px;color:var(--text);line-height:1.5}
+.analysis-summary{font-size:13px;color:var(--text2);line-height:1.7;padding-top:12px;border-top:1px solid var(--bdr)}
+
+/* Response output */
+.response-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:14px;animation:fadeUp .4s ease}
+.response-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--bdr)}
+.response-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.response-actions{display:flex;gap:6px}
+.copy-btn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:4px 12px;border-radius:5px;cursor:pointer;font-family:inherit;font-size:11px;transition:all .2s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.response-body{padding:18px 20px}
+.response-subject{font-size:13px;color:var(--accent);margin-bottom:10px;font-weight:500}
+.response-email{font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap}
+.response-tactics{padding:12px 20px;border-top:1px solid var(--bdr);display:flex;flex-wrap:wrap;gap:6px}
+.response-tactic-tag{font-size:9px;padding:2px 8px;border-radius:4px;background:var(--accent-dim);color:var(--accent);font-weight:600}
+.response-note{padding:12px 20px;border-top:1px solid var(--bdr);font-size:11px;color:var(--text3);font-style:italic;line-height:1.5}
+
+/* Loading */
+.loading{text-align:center;padding:48px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.loading-text{font-size:13px;color:var(--text2)}
+
+/* Error */
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;margin-top:16px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="logo">
+    <div class="logo-mark">⚡</div>
+    <span>Objection Response</span>
+  </div>
+  <button class="settings-toggle" onclick="document.getElementById('settings').classList.toggle('open')">⚙ Settings</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings" id="settings">
+  <div class="settings-inner">
+    <label>AI Provider</label>
+    <select id="provider" onchange="saveSettings()">
+      <option value="openai">OpenAI (GPT-4o)</option>
+      <option value="anthropic">Anthropic (Claude)</option>
+    </select>
+    <label>API Key</label>
+    <div>
+      <input type="password" id="apiKey" placeholder="Enter your API key..." oninput="saveSettings()">
+      <div class="key-status" id="keyStatus"></div>
+    </div>
+    <label>Your Product</label>
+    <input type="text" id="productCtx" placeholder="e.g. Revenue intelligence platform" oninput="saveSettings()">
+    <label>Key Differentiators</label>
+    <textarea id="diffCtx" placeholder="What makes you different from competitors? Pricing model, unique features, etc." oninput="saveSettings()"></textarea>
+    <label>Your Name / Title</label>
+    <input type="text" id="senderCtx" placeholder="e.g. Sarah Chen, Account Executive" oninput="saveSettings()">
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- EMAIL THREAD INPUT -->
+  <div style="margin-bottom:24px">
+    <div class="section-label">Email Thread</div>
+    <textarea class="thread-input" id="threadInput" placeholder="Paste the email thread here — include all replies and forwards.
+
+The AI will read the full conversation, identify the objection or concern, analyze the negotiation dynamics, and draft the optimal response.
+
+Works with:
+• Single email with an objection
+• Multi-reply negotiation threads
+• Forwarded chains with internal + external context
+• Pricing pushback threads
+• &quot;We're going with a competitor&quot; emails
+• &quot;Not right now&quot; / timing objections"></textarea>
+    <div class="input-hint">Paste the full thread — more context = smarter response. The AI will figure out who said what.</div>
+  </div>
+
+  <!-- NEGOTIATION TACTICS -->
+  <div style="margin-bottom:24px">
+    <div class="section-label">Negotiation Tactics <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(select any to layer in)</span></div>
+    <div class="tactics-grid" id="tacticsGrid">
+      <div class="tactic" data-tactic="anchoring" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Anchoring</div>
+        <div class="tactic-desc">Set a reference point that makes your position look favorable</div>
+      </div>
+      <div class="tactic" data-tactic="social-proof" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Social Proof</div>
+        <div class="tactic-desc">Reference similar companies that chose you and their outcomes</div>
+      </div>
+      <div class="tactic" data-tactic="scarcity" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Scarcity / Urgency</div>
+        <div class="tactic-desc">Time-limited offer, pricing lock, capacity constraints</div>
+      </div>
+      <div class="tactic" data-tactic="concession" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Strategic Concession</div>
+        <div class="tactic-desc">Offer something small to unlock movement on the deal</div>
+      </div>
+      <div class="tactic" data-tactic="reframe" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Reframe the Problem</div>
+        <div class="tactic-desc">Shift the conversation from cost to cost-of-inaction</div>
+      </div>
+      <div class="tactic" data-tactic="champion" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Arm the Champion</div>
+        <div class="tactic-desc">Give your internal champion ammunition to sell upward</div>
+      </div>
+      <div class="tactic" data-tactic="walk-away" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Willing to Walk</div>
+        <div class="tactic-desc">Politely signal you're okay losing this — shifts power</div>
+      </div>
+      <div class="tactic" data-tactic="empathy" onclick="toggleTactic(this)">
+        <div class="tactic-name"><span class="dot"></span>Empathetic Alignment</div>
+        <div class="tactic-desc">Validate their concern deeply before redirecting</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTIONS ROW -->
+  <div class="options-row">
+    <div class="form-group">
+      <label>Response Tone</label>
+      <select id="tone">
+        <option value="professional">Professional & Confident</option>
+        <option value="warm">Warm & Consultative</option>
+        <option value="direct">Direct & Assertive</option>
+        <option value="casual">Casual & Peer-to-Peer</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Response Length</label>
+      <select id="length">
+        <option value="concise">Concise (3-5 sentences)</option>
+        <option value="standard" selected>Standard (1-2 paragraphs)</option>
+        <option value="detailed">Detailed (full business case)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Goal</label>
+      <select id="goal">
+        <option value="advance" selected>Advance the deal</option>
+        <option value="save">Save from going dark</option>
+        <option value="counter-competitor">Counter a competitor</option>
+        <option value="justify-price">Justify pricing</option>
+        <option value="re-engage">Re-engage after silence</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- GENERATE -->
+  <button class="gen-btn" id="genBtn" onclick="generate()">Analyze Thread & Generate Response</button>
+
+  <!-- OUTPUT -->
+  <div id="output" style="margin-top:28px"></div>
+</div>
+
+<!-- POSTMESSAGE BRIDGE -->
+<script>
+(function(){
+  window.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='salesai-key-delivery'){
+      var k=e.data.key,p=e.data.provider;
+      if(k&&p){
+        var pe=document.getElementById('provider');if(pe)pe.value=p;
+        var ke=document.getElementById('apiKey');if(ke)ke.value=k;
+        if(typeof saveSettings==='function')saveSettings();
+        if(typeof updateKeyStatus==='function')updateKeyStatus();
+      }
+    }
+  });
+  if(window.parent!==window){
+    window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');
+    setTimeout(function(){window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*');},100);
+  }
+})();
+</script>
+
+<script>
+/* ═══ SETTINGS ═══ */
+function saveSettings(){
+  try{localStorage.setItem('salesai_objresp',JSON.stringify({
+    provider:document.getElementById('provider').value,
+    apiKey:document.getElementById('apiKey').value,
+    product:document.getElementById('productCtx').value,
+    diff:document.getElementById('diffCtx').value,
+    sender:document.getElementById('senderCtx').value
+  }));}catch(e){}
+  updateKeyStatus();
+}
+function loadSettings(){
+  try{var s=JSON.parse(localStorage.getItem('salesai_objresp')||'{}');
+    if(s.provider)document.getElementById('provider').value=s.provider;
+    if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;
+    if(s.product)document.getElementById('productCtx').value=s.product;
+    if(s.diff)document.getElementById('diffCtx').value=s.diff;
+    if(s.sender)document.getElementById('senderCtx').value=s.sender;
+  }catch(e){}
+  updateKeyStatus();
+}
+function updateKeyStatus(){
+  var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');
+  if(!k){el.className='key-status no';el.textContent='⚠ No API key — add in Settings';}
+  else{el.className='key-status ok';el.textContent='✓ Key saved locally';}
+}
+
+/* ═══ TACTICS ═══ */
+function toggleTactic(el){el.classList.toggle('active');}
+function getActiveTactics(){
+  return Array.from(document.querySelectorAll('.tactic.active')).map(function(el){return el.dataset.tactic;});
+}
+
+/* ═══ AI CALL ═══ */
+async function callAI(prompt,system){
+  var provider=document.getElementById('provider').value;
+  var key=document.getElementById('apiKey').value;
+  if(!key)throw new Error('Please add your API key in Settings.');
+  if(provider==='openai'){
+    var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.7,max_tokens:3000})});
+    if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error?.message||'OpenAI error: '+r.status);}
+    var d=await r.json();return d.choices[0].message.content;
+  }else{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,system:system,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error?.message||'Anthropic error: '+r.status);}
+    var d=await r.json();return d.content[0].text;
+  }
+}
+
+/* ═══ GENERATE ═══ */
+async function generate(){
+  var thread=document.getElementById('threadInput').value.trim();
+  if(!thread){alert('Please paste an email thread.');return;}
+
+  var tactics=getActiveTactics();
+  var tone=document.getElementById('tone').value;
+  var length=document.getElementById('length').value;
+  var goal=document.getElementById('goal').value;
+  var product=document.getElementById('productCtx').value||'[not specified]';
+  var diff=document.getElementById('diffCtx').value||'[not specified]';
+  var sender=document.getElementById('senderCtx').value||'[not specified]';
+
+  var btn=document.getElementById('genBtn');
+  var output=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Analyzing thread...';
+  output.innerHTML='<div class="loading"><div class="spinner"></div><div class="loading-text">Reading conversation, identifying objection, crafting response...</div></div>';
+
+  var tacticDescriptions={
+    'anchoring':'Use anchoring: set a reference point (competitor pricing, industry benchmarks, total cost of inaction) that makes our position look favorable.',
+    'social-proof':'Use social proof: reference specific similar companies (by industry/size) that chose us and the outcomes they achieved. Be specific with metrics if possible.',
+    'scarcity':'Use scarcity/urgency: mention a genuine time-limited element (pricing lock, implementation slot, quarter-end terms) without being pushy.',
+    'concession':'Use strategic concession: offer something small but valuable (extended trial, extra seats, implementation support) to unlock movement, while protecting core pricing.',
+    'reframe':'Reframe the problem: shift the conversation from the cost of our solution to the cost of NOT solving this problem. Quantify the pain of the status quo.',
+    'champion':'Arm the champion: write this so our contact can forward it or use it to build an internal business case. Include data points and ROI language that works in an exec presentation.',
+    'walk-away':'Signal willingness to walk: politely communicate that we respect their process and are okay if the timing isn\'t right, without being passive-aggressive. This shifts negotiation power.',
+    'empathy':'Lead with empathetic alignment: deeply validate their concern before redirecting. Show you genuinely understand their position and constraints before presenting your perspective.'
+  };
+
+  var tacticInstructions=tactics.length>0?'\n\nNEGOTIATION TACTICS TO APPLY:\n'+tactics.map(function(t){return '- '+tacticDescriptions[t];}).join('\n'):'';
+
+  var system='You are an elite B2B sales strategist and negotiation expert. You analyze email threads to identify the core objection, assess the negotiation dynamics, and craft the optimal response email.\n\nSeller context:\n- Product/Service: '+product+'\n- Key differentiators: '+diff+'\n- Sender: '+sender+'\n\nRespond in this exact JSON format (no markdown, no backticks, raw JSON only):\n{\n  "analysis": {\n    "objection_type": "price | timing | competitor | authority | need | status_quo | trust | other",\n    "objection_summary": "One sentence: what is the prospect actually concerned about?",\n    "sentiment": "hostile | resistant | neutral | warm | desperate",\n    "power_dynamic": "Who has leverage right now and why (1-2 sentences)",\n    "hidden_meaning": "What are they REALLY saying beneath the surface? (1-2 sentences)",\n    "risk_level": "high | medium | low — how close is this deal to dying?"\n  },\n  "responses": [\n    {\n      "strategy": "Name of the approach (2-4 words)",\n      "subject": "Email subject line (for reply or new subject if needed)",\n      "body": "The full email response text. Write as the seller. Natural, human tone. Not robotic.",\n      "tactics_used": ["list of tactic names applied in this response"],\n      "why_this_works": "One sentence on why this approach fits this specific situation",\n      "risk": "What could go wrong with this approach"\n    },\n    {\n      "strategy": "Different approach name",\n      "subject": "...",\n      "body": "...",\n      "tactics_used": ["..."],\n      "why_this_works": "...",\n      "risk": "..."\n    }\n  ]\n}\n\nGuidelines:\n- Generate exactly 2 response options with DIFFERENT strategic approaches\n- Tone: '+tone+'\n- Length: '+length+' (concise=3-5 sentences, standard=1-2 paragraphs, detailed=full business case)\n- Goal: '+goal+'\n- Read the ENTIRE thread to understand full context, history, and relationship dynamic\n- Identify who the prospect is, their role, their concerns, and what stage the deal is in\n- Each response must be a complete, ready-to-send email — not a framework or template\n- Reference specific things from the thread to show the response is contextual, not generic\n- Sign off as the sender if provided'+tacticInstructions;
+
+  var prompt='Analyze this email thread and generate the optimal response:\n\n---EMAIL THREAD---\n'+thread+'\n---END THREAD---';
+
+  try{
+    var raw=await callAI(prompt,system);
+    var parsed;
+    try{parsed=JSON.parse(raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}
+    catch(e){var m=raw.match(/\{[\s\S]*\}/);if(m)parsed=JSON.parse(m[0]);else throw new Error('Could not parse response. Try again.');}
+
+    var a=parsed.analysis;
+    var typeColors={price:'var(--yellow)',timing:'var(--blue)',competitor:'var(--red)',authority:'var(--purple)',need:'var(--orange)',status_quo:'var(--text2)',trust:'var(--red)',other:'var(--text3)'};
+    var sentColors={hostile:'var(--red)',resistant:'var(--orange)',neutral:'var(--text2)',warm:'var(--green)',desperate:'var(--yellow)'};
+    var riskColors={high:'var(--red)',medium:'var(--orange)',low:'var(--green)'};
+
+    var html='';
+
+    // Analysis panel
+    html+='<div class="analysis">';
+    html+='<div class="analysis-header">';
+    html+='<div class="analysis-title">Thread Analysis</div>';
+    html+='<div class="analysis-badges">';
+    html+='<span class="badge" style="background:'+typeColors[a.objection_type]+'18;color:'+typeColors[a.objection_type]+'">'+a.objection_type+'</span>';
+    html+='<span class="badge" style="background:'+sentColors[a.sentiment]+'18;color:'+sentColors[a.sentiment]+'">'+a.sentiment+'</span>';
+    html+='<span class="badge" style="background:'+riskColors[a.risk_level]+'18;color:'+riskColors[a.risk_level]+'">'+a.risk_level+' risk</span>';
+    html+='</div></div>';
+    html+='<div class="analysis-grid">';
+    html+='<div class="analysis-item"><div class="analysis-item-label">Core Objection</div><div class="analysis-item-value">'+a.objection_summary+'</div></div>';
+    html+='<div class="analysis-item"><div class="analysis-item-label">Power Dynamic</div><div class="analysis-item-value">'+a.power_dynamic+'</div></div>';
+    html+='</div>';
+    html+='<div class="analysis-summary"><strong style="color:var(--accent)">What they\'re really saying:</strong> '+a.hidden_meaning+'</div>';
+    html+='</div>';
+
+    // Response cards
+    var labels=['OPTION A','OPTION B'];
+    parsed.responses.forEach(function(r,i){
+      html+='<div class="response-card" style="animation-delay:'+(0.1+i*0.15)+'s">';
+      html+='<div class="response-header">';
+      html+='<div><span class="response-label" style="color:var(--accent)">'+labels[i]+'</span> <span style="font-size:13px;color:var(--text);margin-left:8px;font-weight:500">'+r.strategy+'</span></div>';
+      html+='<div class="response-actions"><button class="copy-btn" onclick="copyResponse('+i+',this)">Copy email</button></div>';
+      html+='</div>';
+      html+='<div class="response-body">';
+      if(r.subject)html+='<div class="response-subject">Subject: '+r.subject+'</div>';
+      html+='<div class="response-email" id="resp'+i+'">'+r.body+'</div>';
+      html+='</div>';
+      if(r.tactics_used&&r.tactics_used.length>0){
+        html+='<div class="response-tactics">';
+        r.tactics_used.forEach(function(t){html+='<span class="response-tactic-tag">'+t+'</span>';});
+        html+='</div>';
+      }
+      html+='<div class="response-note"><strong style="color:var(--green);font-style:normal">Why this works:</strong> '+r.why_this_works+'<br><strong style="color:var(--red);font-style:normal">Risk:</strong> '+r.risk+'</div>';
+      html+='</div>';
+    });
+
+    output.innerHTML=html;
+    window._responses=parsed.responses;
+  }catch(e){
+    output.innerHTML='<div class="error">⚠ '+e.message+'</div>';
+  }
+  btn.disabled=false;btn.textContent='Analyze Thread & Generate Response';
+}
+
+function copyResponse(i,btn){
+  var r=window._responses[i];
+  var text=(r.subject?'Subject: '+r.subject+'\n\n':'')+r.body;
+  navigator.clipboard.writeText(text);
+  btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy email';},1500);
+}
+
+loadSettings();
+</script>
+</body>
+</html>

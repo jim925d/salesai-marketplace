@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email-to-CRM Logger</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080B12;--bg2:#0D1117;--bg3:#161B22;--accent:#818CF8;--accent-dim:rgba(129,140,248,0.08);--accent-bdr:rgba(129,140,248,0.2);--text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;--bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);--glass:rgba(230,237,243,0.02);--green:#3FB950;--red:#F85149;--yellow:#E3B341;--blue:#58A6FF;--purple:#D2A8FF;--orange:#F0883E}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}.logo span{font-family:Georgia,serif;font-size:15px}
+.hbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}.hbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sett{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s}.sett.open{max-height:220px}
+.sg{padding:20px 28px;display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;max-width:640px}
+.sg label{font-size:12px;color:var(--text2)}.sg select,.sg input{background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:8px 12px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;outline:none}
+.ks{font-size:10px;font-family:monospace;margin-top:3px}.ks.ok{color:var(--green)}.ks.no{color:var(--red)}
+.container{max-width:960px;margin:0 auto;padding:28px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+textarea{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:14px 16px;border-radius:10px;font-family:inherit;font-size:13px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--accent-bdr)}
+.hint{font-size:11px;color:var(--text3);margin-top:5px}
+.gbtn{background:var(--accent);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;margin-top:12px}.gbtn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(129,140,248,0.2)}.gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.otabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--bdr);padding-bottom:12px}
+.otab{background:transparent;border:1px solid transparent;color:var(--text3);padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:500;transition:all .2s}.otab:hover{color:var(--text2)}.otab.active{background:var(--accent-dim);border-color:var(--accent-bdr);color:var(--accent)}
+.opanel{display:none}.opanel.active{display:block;animation:fadeUp .35s ease}
+.scard{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.scard-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--bg3);border-bottom:1px solid var(--bdr)}
+.scard-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)}
+.scard-body{padding:14px 18px;font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--text)}
+.cpbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:10px;transition:all .2s}.cpbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tag{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.commit-table{width:100%;border-collapse:separate;border-spacing:0}
+.commit-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding:8px 12px;border-bottom:1px solid var(--bdr);font-weight:600}
+.commit-table td{padding:10px 12px;border-bottom:1px solid var(--bdr);font-size:12px;color:var(--text2);vertical-align:top}
+.signal-item{display:flex;align-items:start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)}.signal-item:last-child{border:none}
+.sent-bar{height:8px;border-radius:4px;background:var(--bg3);overflow:hidden;margin:8px 0}
+.sent-fill{height:100%;border-radius:4px;transition:width .5s}
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px}
+.intel-item{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px}
+.intel-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:3px;font-weight:600}
+.intel-val{font-size:12px;color:var(--text2);line-height:1.5}
+.loading{text-align:center;padding:48px}.spinner{width:28px;height:28px;border:2.5px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:14px;border-radius:10px;font-size:13px;margin-top:16px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="logo"><div class="logo-mark">📧</div><span>Email-to-CRM</span></div><button class="hbtn" onclick="document.getElementById('sett').classList.toggle('open')">⚙ Settings</button></div>
+<div class="sett" id="sett"><div class="sg">
+<label>AI Provider</label><select id="provider" onchange="sS()"><option value="openai">OpenAI (GPT-4o)</option><option value="anthropic">Anthropic (Claude)</option></select>
+<label>API Key</label><div><input type="password" id="apiKey" placeholder="API key..." oninput="sS()"><div class="ks" id="keyStatus"></div></div>
+<label>CRM Platform</label><select id="crm" onchange="sS()"><option value="salesforce">Salesforce</option><option value="hubspot">HubSpot</option><option value="generic">Generic</option></select>
+</div></div>
+
+<div class="container">
+<div style="margin-bottom:20px">
+  <div class="sl">Email Thread</div>
+  <textarea id="threadInput" style="min-height:200px" placeholder="Paste the full email thread here — include all replies and forwards.&#10;&#10;The AI will:&#10;• Parse participants and thread structure&#10;• Extract every commitment made by either side&#10;• Auto-tag the activity type&#10;• Analyze sentiment and buying signals&#10;• Format for your CRM platform&#10;&#10;Works with any email format — Outlook, Gmail, Apple Mail.&#10;Headers and signatures are handled automatically."></textarea>
+  <div class="hint">Paste the full thread. The AI strips signatures, disclaimers, and forwarding headers automatically.</div>
+</div>
+<button class="gbtn" id="genBtn" onclick="generate()">Parse & Log to CRM</button>
+<div id="output" style="margin-top:28px"></div>
+</div>
+
+<script>
+(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='salesai-key-delivery'){document.getElementById('provider').value=e.data.provider;document.getElementById('apiKey').value=e.data.key;sS();uK();}});if(window.parent!==window){window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');setTimeout(()=>window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*'),100);}})();
+</script>
+<script>
+function sS(){try{localStorage.setItem('salesai_email_crm',JSON.stringify({provider:document.getElementById('provider').value,apiKey:document.getElementById('apiKey').value,crm:document.getElementById('crm').value}));}catch(e){}uK();}
+function lS(){try{var s=JSON.parse(localStorage.getItem('salesai_email_crm')||'{}');if(s.provider)document.getElementById('provider').value=s.provider;if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;if(s.crm)document.getElementById('crm').value=s.crm;}catch(e){}uK();}
+function uK(){var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');el.className=k?'ks ok':'ks no';el.textContent=k?'✓ Key saved':'⚠ No API key';}
+function saveSettings(){sS();}function updateKeyStatus(){uK();}
+async function callAI(p,s){var pv=document.getElementById('provider').value,k=document.getElementById('apiKey').value;if(!k)throw new Error('Add API key.');if(pv==='openai'){var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:s},{role:'user',content:p}],temperature:0.2,max_tokens:4000})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).choices[0].message.content;}else{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:s,messages:[{role:'user',content:p}]})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).content[0].text;}}
+function pJ(r){try{return JSON.parse(r.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}catch(e){var m=r.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('Parse error.');}}
+
+async function generate(){
+  var thread=document.getElementById('threadInput').value.trim();
+  if(!thread){alert('Paste an email thread.');return;}
+  var crm=document.getElementById('crm').value;
+  var btn=document.getElementById('genBtn'),out=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Parsing...';
+  out.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:13px;color:var(--text2)">Parsing thread, extracting commitments, analyzing sentiment...</div></div>';
+
+  var sys='Parse email threads into structured CRM activity records with deal intelligence.\n\nCRM: '+crm+'\n\nRespond in exact JSON:\n{"activity":{"type":"Email Thread","direction":"Inbound|Outbound|Bidirectional","date":"Most recent date","subject":"Thread subject","from":"Primary sender","to":"Recipients","account":"Company name","auto_tag":"Discovery|Demo Follow-up|Negotiation|Technical|Procurement|Renewal|Check-in|Cold Outreach|Other"},"summary":"2-3 sentence executive summary","key_points":"Bullet list (use • per line)","commitments":[{"who":"Name","what":"What they committed to","by_when":"Date or Not specified","status":"pending"}],"deal_intelligence":{"buying_signals":["Positive indicators"],"concerns":["Prospect worries"],"competitors":["Any mentioned"],"next_steps":"What should happen next","stage":"Early|Mid|Late|At Risk"},"sentiment":{"score":68,"label":"e.g. Interested but cautious","tone_shift":"How tone changed across thread","signals":[{"type":"buying_signal|red_flag|neutral","icon":"🟢|🔴|🟡","text":"What was observed"}]},"crm_formatted":"Full activity description formatted for '+crm+' — ready to paste"}\n\nRules:\n- Extract EVERY commitment from both sides\n- Strip signatures and disclaimers\n- Identify who is driving and who is blocking\n- Sentiment: 0=dead, 50=neutral, 100=ready to buy';
+
+  try{
+    var raw=await callAI('Parse this email thread:\n\n'+thread,sys);
+    var p=pJ(raw);window._data=p;
+    var h='';
+
+    // Tabs
+    var tabs=[{id:'summary',l:'📋 Summary'},{id:'commitments',l:'🤝 Commitments'},{id:'intel',l:'🎯 Deal Intel'},{id:'sentiment',l:'📊 Sentiment'},{id:'crm',l:'☁️ CRM Output'}];
+    h+='<div class="otabs">';tabs.forEach(function(t,i){h+='<button class="otab'+(i===0?' active':'')+'" onclick="swTab(\''+t.id+'\',this)">'+t.l+'</button>';});h+='</div>';
+
+    // Summary tab
+    var a=p.activity;
+    var tagColors={'Discovery':'var(--blue)','Demo Follow-up':'var(--purple)','Negotiation':'var(--orange)','Technical':'var(--accent)','Procurement':'var(--yellow)','Renewal':'var(--green)','Check-in':'var(--text2)','Cold Outreach':'var(--accent)'};
+    var tagCol=tagColors[a.auto_tag]||'var(--text3)';
+
+    h+='<div class="opanel active" id="p-summary">';
+    h+='<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><span class="tag" style="background:'+tagCol+'14;color:'+tagCol+'">'+a.auto_tag+'</span><span class="tag" style="background:var(--glass);color:var(--text3)">'+a.direction+'</span><span class="tag" style="background:var(--glass);color:var(--text3)">'+a.date+'</span></div>';
+    h+='<div class="scard"><div class="scard-hdr"><span class="scard-title">Activity Record</span><button class="cpbtn" onclick="cpT(\'sum-body\',this)">Copy</button></div><div class="scard-body" id="sum-body">';
+    h+='Subject: '+a.subject+'\nFrom: '+a.from+'\nTo: '+a.to+'\nAccount: '+a.account+'\n\n'+p.summary+'\n\nKey Points:\n'+p.key_points;
+    h+='</div></div></div>';
+
+    // Commitments tab
+    h+='<div class="opanel" id="p-commitments">';
+    if(p.commitments&&p.commitments.length){
+      h+='<table class="commit-table"><thead><tr><th>Who</th><th>Commitment</th><th>By When</th><th>Status</th></tr></thead><tbody>';
+      p.commitments.forEach(function(c){h+='<tr><td style="font-weight:600;color:var(--text)">'+c.who+'</td><td>'+c.what+'</td><td style="color:var(--accent)">'+c.by_when+'</td><td><span class="tag" style="background:var(--yellow)14;color:var(--yellow)">'+c.status+'</span></td></tr>';});
+      h+='</tbody></table>';
+    }else{h+='<div style="text-align:center;padding:32px;color:var(--text3)">No explicit commitments found in this thread.</div>';}
+    h+='</div>';
+
+    // Deal Intel tab
+    h+='<div class="opanel" id="p-intel"><div class="scard"><div class="scard-hdr"><span class="scard-title">Deal Intelligence</span></div><div class="intel-grid">';
+    var di=p.deal_intelligence;
+    var stageCol=di.stage==='Late'?'var(--green)':di.stage==='At Risk'?'var(--red)':di.stage==='Mid'?'var(--yellow)':'var(--blue)';
+    h+='<div class="intel-item"><div class="intel-label">Stage Indicator</div><div class="intel-val"><span style="color:'+stageCol+';font-weight:600">'+di.stage+'</span></div></div>';
+    h+='<div class="intel-item"><div class="intel-label">Next Steps</div><div class="intel-val">'+di.next_steps+'</div></div>';
+    h+='</div>';
+    h+='<div style="padding:0 18px 14px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+    h+='<div><div class="intel-label" style="color:var(--green);margin-bottom:6px">Buying Signals</div>';
+    (di.buying_signals||[]).forEach(function(s){h+='<div style="font-size:12px;color:var(--text2);margin-bottom:3px;display:flex;gap:6px"><span style="color:var(--green)">🟢</span>'+s+'</div>';});
+    h+='</div><div><div class="intel-label" style="color:var(--red);margin-bottom:6px">Concerns</div>';
+    (di.concerns||[]).forEach(function(s){h+='<div style="font-size:12px;color:var(--text2);margin-bottom:3px;display:flex;gap:6px"><span style="color:var(--red)">🔴</span>'+s+'</div>';});
+    h+='</div></div>';
+    if(di.competitors&&di.competitors.length){h+='<div style="margin-top:10px"><div class="intel-label" style="color:var(--orange);margin-bottom:4px">Competitors Mentioned</div>';di.competitors.forEach(function(c){h+='<span class="tag" style="background:var(--orange)14;color:var(--orange);margin-right:4px">'+c+'</span>';});h+='</div>';}
+    h+='</div></div></div>';
+
+    // Sentiment tab
+    var se=p.sentiment;
+    var sCol=se.score>=70?'var(--green)':se.score>=40?'var(--yellow)':'var(--red)';
+    h+='<div class="opanel" id="p-sentiment"><div class="scard"><div class="scard-hdr"><span class="scard-title">Conversation Sentiment</span></div>';
+    h+='<div style="padding:16px 18px;display:flex;align-items:center;gap:16px"><div style="text-align:center;min-width:60px"><div style="font-family:Georgia,serif;font-size:32px;color:'+sCol+'">'+se.score+'</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Score</div></div><div style="flex:1"><div style="font-size:14px;font-weight:500;margin-bottom:6px">'+se.label+'</div><div class="sent-bar"><div class="sent-fill" style="width:'+se.score+'%;background:'+sCol+'"></div></div></div></div>';
+    if(se.tone_shift)h+='<div style="padding:0 18px 12px;font-size:12px;color:var(--text3)"><strong style="color:var(--text2)">Tone shift:</strong> '+se.tone_shift+'</div>';
+    if(se.signals&&se.signals.length){h+='<div style="padding:0 18px 14px">';se.signals.forEach(function(s){var tc=s.type==='buying_signal'?'var(--green)':s.type==='red_flag'?'var(--red)':'var(--yellow)';h+='<div class="signal-item"><span style="font-size:14px">'+s.icon+'</span><span style="font-size:12px;color:var(--text2);flex:1">'+s.text+'</span><span class="tag" style="background:'+tc+'14;color:'+tc+'">'+(s.type==='buying_signal'?'Signal':s.type==='red_flag'?'Risk':'Neutral')+'</span></div>';});h+='</div>';}
+    h+='</div></div>';
+
+    // CRM output tab
+    h+='<div class="opanel" id="p-crm"><div class="scard"><div class="scard-hdr"><span class="scard-title">'+crm.charAt(0).toUpperCase()+crm.slice(1)+' Activity Record</span><button class="cpbtn" onclick="cpT(\'crm-body\',this)">Copy</button></div><div class="scard-body" id="crm-body">'+p.crm_formatted+'</div></div></div>';
+
+    out.innerHTML=h;
+  }catch(e){out.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='Parse & Log to CRM';
+}
+function swTab(id,btn){document.querySelectorAll('.otab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.opanel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');var pnl=document.getElementById('p-'+id);if(pnl)pnl.classList.add('active');}
+function cpT(id,btn){var el=document.getElementById(id);if(el)navigator.clipboard.writeText(el.textContent);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);}
+lS();
+</script>
+</body>
+</html>

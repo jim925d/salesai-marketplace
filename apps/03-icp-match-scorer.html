@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICP Match Scorer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080B12;--bg2:#0D1117;--bg3:#161B22;
+  --accent:#FBBF24;--accent-dim:rgba(251,191,36,0.08);--accent-bdr:rgba(251,191,36,0.2);
+  --text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;
+  --bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);
+  --glass:rgba(230,237,243,0.02);
+  --green:#3FB950;--blue:#58A6FF;--purple:#D2A8FF;--red:#F85149;--orange:#F0883E;
+}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo span{font-family:Georgia,serif;font-size:15px;letter-spacing:-0.3px}
+.header-actions{display:flex;gap:6px}
+.hdr-btn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent)}
+.hdr-btn.active{background:var(--accent-dim);border-color:var(--accent-bdr);color:var(--accent)}
+
+/* Panels */
+.panel{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s}
+.panel.open{max-height:600px}
+.panel-inner{padding:20px 28px}
+.panel-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:14px}
+.panel-grid{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center;max-width:640px}
+.panel-grid label{font-size:12px;color:var(--text2)}
+.panel-grid select,.panel-grid input,.panel-grid textarea{background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:8px 12px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;outline:none}
+.panel-grid textarea{min-height:40px;resize:vertical}
+.panel-grid select:focus,.panel-grid input:focus,.panel-grid textarea:focus{border-color:var(--accent-bdr)}
+.key-status{font-size:10px;font-family:'JetBrains Mono',monospace;margin-top:3px}
+.key-status.ok{color:var(--green)}.key-status.no{color:var(--red)}
+
+/* ICP Template */
+.icp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:700px}
+.icp-field{background:var(--glass);border:1px solid var(--bdr);border-radius:9px;padding:12px 14px}
+.icp-field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.icp-field input,.icp-field select,.icp-field textarea{background:var(--bg);border:1px solid var(--bdr);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:inherit;width:100%;outline:none}
+.icp-field textarea{min-height:36px;resize:vertical}
+.icp-field input:focus,.icp-field select:focus,.icp-field textarea:focus{border-color:var(--accent-bdr)}
+.icp-actions{display:flex;gap:8px;margin-top:14px}
+.icp-save{background:var(--accent);color:#000;border:none;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.icp-reset{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:8px 20px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+
+/* Main */
+.container{max-width:960px;margin:0 auto;padding:28px}
+.section-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+
+/* Mode tabs */
+.mode-tabs{display:flex;gap:4px;margin-bottom:16px}
+.mode-tab{background:var(--glass);border:1px solid var(--bdr);color:var(--text2);padding:9px 18px;border-radius:7px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;transition:all .2s}
+.mode-tab:hover{border-color:var(--bdr-h)}
+.mode-tab.active{background:var(--accent-dim);border-color:var(--accent-bdr);color:var(--accent)}
+
+textarea,select{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:14px 16px;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;transition:border-color .2s}
+textarea:focus,select:focus{outline:none;border-color:var(--accent-bdr);box-shadow:0 0 0 3px rgba(251,191,36,0.06)}
+.input-hint{font-size:11px;color:var(--text3);margin-top:6px}
+
+.gen-btn{background:var(--accent);color:#000;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;margin-top:16px}
+.gen-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(251,191,36,0.2)}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* Score hero */
+.score-hero{text-align:center;padding:32px;background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;margin-bottom:20px;animation:fadeUp .4s ease}
+.score-number{font-family:Georgia,serif;font-size:64px;letter-spacing:-3px;line-height:1}
+.score-grade{font-size:20px;font-weight:700;margin-top:4px}
+.score-label{font-size:14px;color:var(--text2);margin-top:4px}
+
+/* Criteria grid */
+.criteria-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.criteria-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;animation:fadeUp .4s ease}
+.criteria-card.pass{border-left:3px solid var(--green)}
+.criteria-card.partial{border-left:3px solid var(--accent)}
+.criteria-card.fail{border-left:3px solid var(--red)}
+.criteria-name{font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between}
+.criteria-status{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 6px;border-radius:3px}
+.criteria-detail{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* Competitor detection */
+.competitor-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:20px;animation:fadeUp .4s ease}
+.competitor-header{padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.competitor-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.competitor-body{padding:16px 20px;font-size:13px;line-height:1.7;color:var(--text2)}
+.competitor-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 10px;border-radius:5px;font-weight:600;margin-right:6px;margin-bottom:4px}
+
+/* Outreach */
+.outreach-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:20px;animation:fadeUp .4s ease}
+.outreach-header{padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.outreach-body{padding:16px 20px}
+.outreach-angle{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px}
+.outreach-opener{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:14px;font-size:14px;line-height:1.7;color:var(--text);font-style:italic}
+.copy-btn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:4px 12px;border-radius:5px;cursor:pointer;font-family:inherit;font-size:11px;transition:all .2s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Batch results table */
+.batch-table{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:20px}
+.batch-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding:10px 14px;border-bottom:1px solid var(--bdr);font-weight:600}
+.batch-table td{padding:12px 14px;border-bottom:1px solid var(--bdr);font-size:13px;vertical-align:top}
+.batch-row{cursor:pointer;transition:background .15s}
+.batch-row:hover{background:rgba(230,237,243,0.03)}
+.batch-score{font-family:Georgia,serif;font-size:18px;font-weight:400;letter-spacing:-0.5px}
+.batch-grade{font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px}
+.batch-expand{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;margin:-6px 14px 12px;padding:20px;animation:fadeUp .3s ease}
+
+.loading{text-align:center;padding:48px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;margin-top:16px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="logo"><div class="logo-mark">🎯</div><span>ICP Scorer</span></div>
+  <div class="header-actions">
+    <button class="hdr-btn" id="icpToggle" onclick="togglePanel('icp')">🎯 ICP Template</button>
+    <button class="hdr-btn" onclick="togglePanel('settings')">⚙ Settings</button>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="panel" id="panel-settings">
+  <div class="panel-inner">
+    <div class="panel-title">Settings</div>
+    <div class="panel-grid">
+      <label>AI Provider</label><select id="provider" onchange="saveSettings()"><option value="openai">OpenAI (GPT-4o)</option><option value="anthropic">Anthropic (Claude)</option></select>
+      <label>API Key</label><div><input type="password" id="apiKey" placeholder="Enter your API key..." oninput="saveSettings()"><div class="key-status" id="keyStatus"></div></div>
+      <label>Your Product</label><input type="text" id="productCtx" placeholder="e.g. AI-powered revenue intelligence platform" oninput="saveSettings()">
+      <label>Competitors</label><textarea id="competitorsCtx" placeholder="List your main competitors, one per line" oninput="saveSettings()"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ICP TEMPLATE PANEL -->
+<div class="panel" id="panel-icp">
+  <div class="panel-inner">
+    <div class="panel-title">ICP Template <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">— configure once, score forever</span></div>
+    <div class="icp-grid">
+      <div class="icp-field"><label>Target Industries</label><textarea id="icpIndustry" placeholder="SaaS, Fintech, Healthcare (comma-separated)"></textarea></div>
+      <div class="icp-field"><label>Employee Range</label><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center"><input type="number" id="icpEmpMin" placeholder="100"><span style="color:var(--text3);font-size:12px">to</span><input type="number" id="icpEmpMax" placeholder="5000"></div></div>
+      <div class="icp-field"><label>Revenue Range</label><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center"><input type="text" id="icpRevMin" placeholder="$5M"><span style="color:var(--text3);font-size:12px">to</span><input type="text" id="icpRevMax" placeholder="$500M"></div></div>
+      <div class="icp-field"><label>Funding Stage</label><select id="icpFunding"><option value="">Any</option><option value="seed">Seed</option><option value="seriesA">Series A</option><option value="seriesB+">Series B+</option><option value="growth">Growth / PE-backed</option><option value="public">Public</option></select></div>
+      <div class="icp-field"><label>Required Tech Stack</label><textarea id="icpTech" placeholder="Salesforce, HubSpot, Outreach (comma-separated)"></textarea></div>
+      <div class="icp-field"><label>Geography</label><textarea id="icpGeo" placeholder="North America, Europe, APAC (comma-separated)"></textarea></div>
+      <div class="icp-field"><label>Must Have Signals</label><textarea id="icpSignals" placeholder="Recent funding, hiring sales team, new CRO, expanding internationally"></textarea></div>
+      <div class="icp-field"><label>Disqualifiers</label><textarea id="icpDisqual" placeholder="Less than 50 employees, no dedicated sales team, government/public sector"></textarea></div>
+    </div>
+    <div class="icp-actions">
+      <button class="icp-save" onclick="saveICP()">Save ICP Template</button>
+      <button class="icp-reset" onclick="resetICP()">Reset to defaults</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- MODE TABS -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('single',this)">🎯 Single Company</button>
+    <button class="mode-tab" onclick="setMode('batch',this)">📊 Batch Score (CSV)</button>
+  </div>
+
+  <!-- SINGLE MODE -->
+  <div id="mode-single">
+    <div class="section-label">Company to Score</div>
+    <textarea id="companyInput" style="min-height:140px" placeholder="Paste any information about the company:
+
+• Company name and website
+• Industry and what they do
+• Size (employees, revenue)
+• Tech stack, tools they use
+• Location / HQ
+• Recent news, funding, hiring
+• LinkedIn company page content
+• Crunchbase profile copy
+
+The more you provide, the more accurate the score."></textarea>
+    <div class="input-hint">Tip: Copy-paste from their website About page, LinkedIn, or Crunchbase for best results.</div>
+    <button class="gen-btn" id="genBtnSingle" onclick="scoreSingle()">Score This Company</button>
+  </div>
+
+  <!-- BATCH MODE -->
+  <div id="mode-batch" style="display:none">
+    <div class="section-label">Companies to Score <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(one per line, or paste CSV)</span></div>
+    <textarea id="batchInput" style="min-height:180px" placeholder="Paste a list of companies — one per line with any details you have:
+
+Acme Corp — 200 employees, SaaS, Series B, uses Salesforce
+TechFlow Inc — fintech startup, 80 people, NYC, just raised $15M  
+GlobalScale — enterprise software, 2000+ employees, public (NASDAQ: GSC)
+NovaPay — payments company, 300 employees, London, uses HubSpot
+
+Or paste a CSV with headers:
+Company, Industry, Employees, Location, Details"></textarea>
+    <div class="input-hint">Supports up to 15 companies per batch. More detail per company = better scores.</div>
+    <button class="gen-btn" id="genBtnBatch" onclick="scoreBatch()">Score All Companies</button>
+  </div>
+
+  <div id="output" style="margin-top:28px"></div>
+</div>
+
+<!-- BRIDGE -->
+<script>
+(function(){
+  window.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='salesai-key-delivery'){
+      if(e.data.key&&e.data.provider){
+        var pe=document.getElementById('provider');if(pe)pe.value=e.data.provider;
+        var ke=document.getElementById('apiKey');if(ke)ke.value=e.data.key;
+        if(typeof saveSettings==='function')saveSettings();
+        if(typeof updateKeyStatus==='function')updateKeyStatus();
+      }
+    }
+  });
+  if(window.parent!==window){
+    window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');
+    setTimeout(function(){window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*');},100);
+  }
+})();
+</script>
+
+<script>
+/* ═══ PANELS ═══ */
+function togglePanel(id){
+  document.querySelectorAll('.panel').forEach(function(p){
+    if(p.id!=='panel-'+id)p.classList.remove('open');
+  });
+  document.getElementById('panel-'+id).classList.toggle('open');
+}
+
+/* ═══ SETTINGS ═══ */
+function saveSettings(){
+  try{localStorage.setItem('salesai_icp_settings',JSON.stringify({
+    provider:document.getElementById('provider').value,
+    apiKey:document.getElementById('apiKey').value,
+    product:document.getElementById('productCtx').value,
+    competitors:document.getElementById('competitorsCtx').value
+  }));}catch(e){}
+  updateKeyStatus();
+}
+function loadSettings(){
+  try{var s=JSON.parse(localStorage.getItem('salesai_icp_settings')||'{}');
+    if(s.provider)document.getElementById('provider').value=s.provider;
+    if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;
+    if(s.product)document.getElementById('productCtx').value=s.product;
+    if(s.competitors)document.getElementById('competitorsCtx').value=s.competitors;
+  }catch(e){}
+  updateKeyStatus();
+}
+function updateKeyStatus(){
+  var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');
+  if(!k){el.className='key-status no';el.textContent='⚠ No API key';}
+  else{el.className='key-status ok';el.textContent='✓ Key saved locally';}
+}
+
+/* ═══ ICP TEMPLATE ═══ */
+function saveICP(){
+  var icp={industry:document.getElementById('icpIndustry').value,empMin:document.getElementById('icpEmpMin').value,empMax:document.getElementById('icpEmpMax').value,revMin:document.getElementById('icpRevMin').value,revMax:document.getElementById('icpRevMax').value,funding:document.getElementById('icpFunding').value,tech:document.getElementById('icpTech').value,geo:document.getElementById('icpGeo').value,signals:document.getElementById('icpSignals').value,disqual:document.getElementById('icpDisqual').value};
+  localStorage.setItem('salesai_icp_template',JSON.stringify(icp));
+  document.getElementById('icpToggle').classList.add('active');
+  alert('ICP template saved!');
+}
+function loadICP(){
+  try{var icp=JSON.parse(localStorage.getItem('salesai_icp_template')||'{}');
+    if(icp.industry)document.getElementById('icpIndustry').value=icp.industry;
+    if(icp.empMin)document.getElementById('icpEmpMin').value=icp.empMin;
+    if(icp.empMax)document.getElementById('icpEmpMax').value=icp.empMax;
+    if(icp.revMin)document.getElementById('icpRevMin').value=icp.revMin;
+    if(icp.revMax)document.getElementById('icpRevMax').value=icp.revMax;
+    if(icp.funding)document.getElementById('icpFunding').value=icp.funding;
+    if(icp.tech)document.getElementById('icpTech').value=icp.tech;
+    if(icp.geo)document.getElementById('icpGeo').value=icp.geo;
+    if(icp.signals)document.getElementById('icpSignals').value=icp.signals;
+    if(icp.disqual)document.getElementById('icpDisqual').value=icp.disqual;
+    if(Object.keys(icp).some(function(k){return icp[k];}))document.getElementById('icpToggle').classList.add('active');
+  }catch(e){}
+}
+function resetICP(){
+  ['icpIndustry','icpEmpMin','icpEmpMax','icpRevMin','icpRevMax','icpTech','icpGeo','icpSignals','icpDisqual'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('icpFunding').value='';
+  localStorage.removeItem('salesai_icp_template');
+  document.getElementById('icpToggle').classList.remove('active');
+}
+function getICPString(){
+  var icp;
+  try{icp=JSON.parse(localStorage.getItem('salesai_icp_template')||'{}');}catch(e){icp={};}
+  var parts=[];
+  if(icp.industry)parts.push('Target industries: '+icp.industry);
+  if(icp.empMin||icp.empMax)parts.push('Employee range: '+(icp.empMin||'any')+' to '+(icp.empMax||'any'));
+  if(icp.revMin||icp.revMax)parts.push('Revenue range: '+(icp.revMin||'any')+' to '+(icp.revMax||'any'));
+  if(icp.funding)parts.push('Funding stage: '+icp.funding);
+  if(icp.tech)parts.push('Required tech stack: '+icp.tech);
+  if(icp.geo)parts.push('Geography: '+icp.geo);
+  if(icp.signals)parts.push('Positive signals: '+icp.signals);
+  if(icp.disqual)parts.push('Disqualifiers: '+icp.disqual);
+  return parts.length?parts.join('\n'):'General B2B SaaS ICP — mid-market, growth-stage, tech-forward companies with dedicated sales teams';
+}
+
+/* ═══ MODE SWITCH ═══ */
+function setMode(mode,btn){
+  document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('mode-single').style.display=mode==='single'?'block':'none';
+  document.getElementById('mode-batch').style.display=mode==='batch'?'block':'none';
+  document.getElementById('output').innerHTML='';
+}
+
+/* ═══ AI CALL ═══ */
+async function callAI(prompt,system){
+  var provider=document.getElementById('provider').value;
+  var key=document.getElementById('apiKey').value;
+  if(!key)throw new Error('Please add your API key in Settings.');
+  if(provider==='openai'){
+    var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.3,max_tokens:4000})});
+    if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error?.message||'API error: '+r.status);}
+    return(await r.json()).choices[0].message.content;
+  }else{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:system,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error?.message||'API error: '+r.status);}
+    return(await r.json()).content[0].text;
+  }
+}
+
+/* ═══ SINGLE SCORE ═══ */
+async function scoreSingle(){
+  var info=document.getElementById('companyInput').value.trim();
+  if(!info){alert('Please enter company information.');return;}
+  var product=document.getElementById('productCtx').value||'';
+  var competitors=document.getElementById('competitorsCtx').value||'';
+  var icpStr=getICPString();
+  var btn=document.getElementById('genBtnSingle'),output=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Scoring...';
+  output.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:13px;color:var(--text2)">Analyzing company fit, checking for competitors...</div></div>';
+
+  var system='You are an ICP scoring expert. Evaluate companies against an Ideal Customer Profile and provide precise, actionable scoring with competitor detection and outreach recommendations.\n\nICP DEFINITION:\n'+icpStr+'\n\n'+(product?'Our product: '+product+'\n':'')+(competitors?'Our competitors: '+competitors+'\n':'')+'\nRespond in exact JSON (no markdown, no backticks):\n{\n  "company_name": "Name",\n  "score": 82,\n  "grade": "A|B|C|D|F",\n  "label": "Strong Fit|Moderate Fit|Weak Fit|Poor Fit",\n  "criteria": [\n    {"name": "Industry Fit", "status": "pass|partial|fail", "detail": "Why"},\n    {"name": "Company Size", "status": "pass|partial|fail", "detail": "Why"},\n    {"name": "Growth Stage", "status": "pass|partial|fail", "detail": "Why"},\n    {"name": "Tech Stack", "status": "pass|partial|fail", "detail": "Why"},\n    {"name": "Geography", "status": "pass|partial|fail", "detail": "Why"},\n    {"name": "Budget Likelihood", "status": "pass|partial|fail", "detail": "Why"}\n  ],\n  "competitors": {\n    "detected": true|false,\n    "names": ["Competitor A"],\n    "confidence": "high|medium|low",\n    "evidence": "What suggests they use this competitor",\n    "displacement_angle": "How to position against this specific competitor"\n  },\n  "outreach": {\n    "approach_angle": "The strategic angle to use when reaching out (2-3 sentences)",\n    "opening_line": "A specific personalized opening line for a cold email or LinkedIn message",\n    "timing_signal": "Why NOW is the right time to reach out (or why it isn\'t)"\n  },\n  "verdict": "2-3 sentence overall assessment"\n}\n\nScoring: 90-100=A (Perfect), 80-89=B (Strong), 65-79=C (Moderate), 50-64=D (Weak), <50=F (Poor)\nBe honest. Don\'t inflate. If info is missing, score conservatively and note gaps.';
+
+  try{
+    var raw=await callAI('Score this company:\n\n'+info,system);
+    var p;try{p=JSON.parse(raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}
+    catch(e){var m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else throw new Error('Parse error.');}
+    output.innerHTML=renderSingleResult(p);
+  }catch(e){output.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='Score This Company';
+}
+
+function renderSingleResult(p){
+  var scoreColor=p.score>=80?'var(--green)':p.score>=65?'var(--accent)':'var(--red)';
+  var html='';
+
+  // Score hero
+  html+='<div class="score-hero"><div class="score-number" style="color:'+scoreColor+'">'+p.score+'</div><div class="score-grade" style="color:'+scoreColor+'">'+p.grade+' — '+p.label+'</div><div class="score-label">'+p.company_name+'</div></div>';
+
+  // Criteria
+  html+='<div class="criteria-grid">';
+  p.criteria.forEach(function(c){
+    var statusColor=c.status==='pass'?'var(--green)':c.status==='partial'?'var(--accent)':'var(--red)';
+    var statusLabel=c.status==='pass'?'✓ Pass':c.status==='partial'?'◐ Partial':'✗ Fail';
+    html+='<div class="criteria-card '+c.status+'"><div class="criteria-name">'+c.name+' <span class="criteria-status" style="background:'+statusColor+'14;color:'+statusColor+'">'+statusLabel+'</span></div><div class="criteria-detail">'+c.detail+'</div></div>';
+  });
+  html+='</div>';
+
+  // Competitor detection
+  if(p.competitors){
+    var comp=p.competitors;
+    var compColor=comp.detected?'var(--red)':'var(--green)';
+    html+='<div class="competitor-box"><div class="competitor-header"><span class="competitor-title" style="color:'+compColor+'">'+(comp.detected?'⚠️ Competitor Detected':'✓ No Competitors Detected')+'</span>';
+    if(comp.detected&&comp.confidence)html+='<span class="competitor-tag" style="background:var(--red);color:#fff">'+comp.confidence+' confidence</span>';
+    html+='</div><div class="competitor-body">';
+    if(comp.detected){
+      if(comp.names&&comp.names.length)html+='<div style="margin-bottom:8px">'+comp.names.map(function(n){return '<span class="competitor-tag" style="background:rgba(248,81,73,0.1);color:var(--red)">'+n+'</span>';}).join('')+'</div>';
+      if(comp.evidence)html+='<div style="margin-bottom:8px"><strong style="color:var(--text)">Evidence:</strong> '+comp.evidence+'</div>';
+      if(comp.displacement_angle)html+='<div><strong style="color:var(--accent)">Displacement strategy:</strong> '+comp.displacement_angle+'</div>';
+    }else{
+      html+='No competitive tools detected based on available information. This is likely a greenfield opportunity.';
+    }
+    html+='</div></div>';
+  }
+
+  // Outreach recommendation
+  if(p.outreach&&p.score>=50){
+    html+='<div class="outreach-box"><div class="outreach-header"><span class="competitor-title" style="color:var(--blue)">Recommended Outreach</span><button class="copy-btn" onclick="copyOutreach(this)">Copy opener</button></div><div class="outreach-body">';
+    html+='<div class="outreach-angle"><strong style="color:var(--text)">Approach angle:</strong> '+p.outreach.approach_angle+'</div>';
+    if(p.outreach.timing_signal)html+='<div style="font-size:12px;color:var(--text2);margin-bottom:14px"><strong style="color:var(--accent)">⚡ Timing:</strong> '+p.outreach.timing_signal+'</div>';
+    html+='<div class="outreach-opener" id="openerText">"'+p.outreach.opening_line+'"</div>';
+    html+='</div></div>';
+    window._opener=p.outreach.opening_line;
+  }
+
+  // Verdict
+  html+='<div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:18px 20px;font-size:13px;color:var(--text2);line-height:1.7;animation:fadeUp .4s ease"><strong style="color:var(--text)">Verdict:</strong> '+p.verdict+'</div>';
+
+  return html;
+}
+
+function copyOutreach(btn){
+  if(window._opener)navigator.clipboard.writeText(window._opener);
+  btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy opener';},1500);
+}
+
+/* ═══ BATCH SCORE ═══ */
+async function scoreBatch(){
+  var input=document.getElementById('batchInput').value.trim();
+  if(!input){alert('Please paste a list of companies.');return;}
+  var product=document.getElementById('productCtx').value||'';
+  var competitors=document.getElementById('competitorsCtx').value||'';
+  var icpStr=getICPString();
+  var btn=document.getElementById('genBtnBatch'),output=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Scoring batch...';
+  output.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:13px;color:var(--text2)">Scoring multiple companies against your ICP...</div></div>';
+
+  var system='You are an ICP scoring expert. Score MULTIPLE companies against an ICP and rank them.\n\nICP DEFINITION:\n'+icpStr+'\n'+(product?'Our product: '+product+'\n':'')+(competitors?'Our competitors: '+competitors+'\n':'')+'\nRespond in exact JSON (no markdown, no backticks):\n{\n  "results": [\n    {\n      "company_name": "Name",\n      "score": 82,\n      "grade": "B",\n      "label": "Strong Fit",\n      "top_reason": "Why this company fits or doesn\'t (1 sentence)",\n      "competitor_detected": "None | Competitor Name",\n      "opening_line": "Personalized opening line for outreach",\n      "criteria": [\n        {"name": "Industry", "status": "pass|partial|fail"},\n        {"name": "Size", "status": "pass|partial|fail"},\n        {"name": "Tech", "status": "pass|partial|fail"},\n        {"name": "Growth", "status": "pass|partial|fail"}\n      ]\n    }\n  ]\n}\n\nRank results by score descending. Be honest — don\'t inflate scores. If company info is sparse, score conservatively.';
+
+  try{
+    var raw=await callAI('Score these companies:\n\n'+input,system);
+    var p;try{p=JSON.parse(raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}
+    catch(e){var m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else throw new Error('Parse error.');}
+
+    var results=p.results||[];
+    results.sort(function(a,b){return b.score-a.score;});
+    window._batchResults=results;
+
+    var html='<div style="font-family:Georgia,serif;font-size:20px;margin-bottom:16px;letter-spacing:-0.5px">'+results.length+' Companies <em style="color:var(--accent);font-style:italic">Ranked</em></div>';
+
+    html+='<table class="batch-table"><thead><tr><th>#</th><th>Company</th><th>Score</th><th>Grade</th><th>Top Reason</th><th>Competitor</th><th style="width:40px"></th></tr></thead><tbody>';
+    results.forEach(function(r,i){
+      var scoreColor=r.score>=80?'var(--green)':r.score>=65?'var(--accent)':'var(--red)';
+      var compDisplay=r.competitor_detected&&r.competitor_detected!=='None'?'<span style="color:var(--red);font-size:11px">⚠ '+r.competitor_detected+'</span>':'<span style="color:var(--green);font-size:11px">✓ None</span>';
+      html+='<tr class="batch-row" onclick="toggleBatchExpand('+i+')">';
+      html+='<td style="color:var(--text3);font-family:Georgia,serif">'+(i+1)+'</td>';
+      html+='<td style="font-weight:600">'+r.company_name+'</td>';
+      html+='<td><span class="batch-score" style="color:'+scoreColor+'">'+r.score+'</span></td>';
+      html+='<td><span class="batch-grade" style="background:'+scoreColor+'14;color:'+scoreColor+'">'+r.grade+'</span></td>';
+      html+='<td style="font-size:12px;color:var(--text2)">'+r.top_reason+'</td>';
+      html+='<td>'+compDisplay+'</td>';
+      html+='<td style="color:var(--text3);font-size:10px">▼</td>';
+      html+='</tr>';
+      html+='<tr id="batch-expand-'+i+'" style="display:none"><td colspan="7" style="padding:0">';
+      html+='<div class="batch-expand">';
+      html+='<div style="display:flex;gap:6px;margin-bottom:10px">';
+      if(r.criteria)r.criteria.forEach(function(c){
+        var cColor=c.status==='pass'?'var(--green)':c.status==='partial'?'var(--accent)':'var(--red)';
+        html+='<span style="font-size:10px;padding:3px 8px;border-radius:4px;background:'+cColor+'14;color:'+cColor+';font-weight:600">'+c.name+': '+(c.status==='pass'?'✓':c.status==='partial'?'◐':'✗')+'</span>';
+      });
+      html+='</div>';
+      if(r.opening_line){
+        html+='<div style="font-size:12px;color:var(--text2);margin-bottom:8px"><strong style="color:var(--blue)">Opening line:</strong></div>';
+        html+='<div style="background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:12px;font-size:13px;color:var(--text);font-style:italic;display:flex;align-items:start;justify-content:space-between;gap:12px"><span>"'+r.opening_line+'"</span><button class="copy-btn" onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.opening_line.replace(/'/g,"\\'")+'\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'Copy\',1500)">Copy</button></div>';
+      }
+      html+='</div></td></tr>';
+    });
+    html+='</tbody></table>';
+
+    output.innerHTML=html;
+  }catch(e){output.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='Score All Companies';
+}
+
+function toggleBatchExpand(i){
+  var row=document.getElementById('batch-expand-'+i);
+  if(row)row.style.display=row.style.display==='none'?'table-row':'none';
+}
+
+loadSettings();
+loadICP();
+</script>
+</body>
+</html>

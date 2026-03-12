@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cold Email Writer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080B12;--bg2:#0D1117;--bg3:#161B22;--accent:#F472B6;--accent-dim:rgba(244,114,182,0.08);--accent-bdr:rgba(244,114,182,0.2);--text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;--bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);--glass:rgba(230,237,243,0.02);--green:#3FB950;--blue:#58A6FF;--purple:#D2A8FF;--red:#F85149;--yellow:#E3B341;--orange:#F0883E}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}.logo span{font-family:Georgia,serif;font-size:15px}
+.hbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}.hbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sett{background:var(--bg2);border-bottom:1px solid var(--bdr);max-height:0;overflow:hidden;transition:max-height .3s}.sett.open{max-height:320px}
+.sg{padding:20px 28px;display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;max-width:640px}
+.sg label{font-size:12px;color:var(--text2)}.sg select,.sg input,.sg textarea{background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:8px 12px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;outline:none}
+.sg textarea{min-height:40px;resize:vertical}
+.ks{font-size:10px;font-family:monospace;margin-top:3px}.ks.ok{color:var(--green)}.ks.no{color:var(--red)}
+.container{max-width:960px;margin:0 auto;padding:28px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+textarea,select,input[type=text]{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--text);padding:12px 14px;border-radius:10px;font-family:inherit;font-size:13px;resize:vertical;transition:border-color .2s}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--accent-bdr)}
+.hint{font-size:11px;color:var(--text3);margin-top:5px}
+.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.fg label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.gbtn{background:var(--accent);color:#000;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;margin-top:12px}.gbtn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(244,114,182,0.2)}.gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+/* Timeline */
+.timeline{display:flex;align-items:center;gap:0;margin-bottom:24px;padding:16px 0}
+.tl-node{text-align:center;flex:0 0 auto;position:relative;z-index:2}
+.tl-dot{width:32px;height:32px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);margin:0 auto 4px}
+.tl-day{font-size:10px;color:var(--text3)}
+.tl-line{flex:1;height:2px;background:linear-gradient(90deg,var(--accent-bdr),var(--accent-bdr));min-width:20px}
+/* Email cards */
+.ecard{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:14px;animation:fadeUp .4s ease}
+.ecard-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--bdr)}
+.ecard-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.ecard-meta{display:flex;gap:6px;align-items:center}
+.pred{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600}
+.vtabs{display:flex;gap:4px;padding:12px 20px;border-bottom:1px solid var(--bdr)}
+.vtab{background:transparent;border:1px solid var(--bdr);color:var(--text3);padding:5px 12px;border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s}.vtab.active{background:var(--accent-dim);border-color:var(--accent-bdr);color:var(--accent)}
+.ebody{padding:16px 20px}
+.esubject{font-size:13px;color:var(--accent);margin-bottom:8px;font-weight:500}
+.etext{font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap}
+.enote{padding:10px 20px;border-top:1px solid var(--bdr);font-size:11px;color:var(--text3);line-height:1.5}
+.cpbtn{background:transparent;border:1px solid var(--bdr);color:var(--text2);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:10px;transition:all .2s}.cpbtn:hover{border-color:var(--accent);color:var(--accent)}
+.strat-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px 20px;margin-bottom:16px;animation:fadeUp .3s ease}
+.loading{text-align:center;padding:48px}.spinner{width:28px;height:28px;border:2.5px solid var(--bdr);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.error{background:rgba(248,81,73,0.06);border:1px solid rgba(248,81,73,0.15);color:var(--red);padding:14px;border-radius:10px;font-size:13px;margin-top:16px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="logo"><div class="logo-mark">✉️</div><span>Cold Email Writer</span></div><button class="hbtn" onclick="document.getElementById('sett').classList.toggle('open')">⚙ Settings</button></div>
+<div class="sett" id="sett"><div class="sg">
+<label>AI Provider</label><select id="provider" onchange="sS()"><option value="openai">OpenAI (GPT-4o)</option><option value="anthropic">Anthropic (Claude)</option></select>
+<label>API Key</label><div><input type="password" id="apiKey" placeholder="API key..." oninput="sS()"><div class="ks" id="keyStatus"></div></div>
+<label>Your Product</label><input type="text" id="productCtx" placeholder="e.g. AI revenue intelligence platform" oninput="sS()">
+<label>Value Prop</label><textarea id="valueCtx" placeholder="One sentence: what you do for customers" oninput="sS()"></textarea>
+<label>Sender Name/Title</label><input type="text" id="senderCtx" placeholder="e.g. Sarah Chen, AE at Acme" oninput="sS()">
+<label>Company Name</label><input type="text" id="companyCtx" placeholder="e.g. Acme Corp" oninput="sS()">
+</div></div>
+
+<div class="container">
+<div style="margin-bottom:20px">
+  <div class="sl">Prospect Details</div>
+  <textarea id="prospectInput" style="min-height:130px" placeholder="Enter everything you know about the prospect:&#10;&#10;• Name, title, company&#10;• Industry, company size&#10;• Recent news, funding, hiring&#10;• Their pain points or challenges&#10;• Mutual connections, shared events&#10;• Their LinkedIn activity or posts&#10;&#10;More detail = more personalized sequences."></textarea>
+  <div class="hint">The AI uses every detail to personalize each email in the sequence.</div>
+</div>
+
+<div style="margin-bottom:16px">
+  <div class="sl">Trigger Event <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(optional — the "why now")</span></div>
+  <input type="text" id="triggerInput" placeholder="e.g. Just raised Series B, hired new CRO, opened London office, posted about scaling challenges">
+</div>
+
+<div class="opts">
+  <div class="fg"><label>Personalization Depth</label><select id="depth"><option value="light">Light (name + company)</option><option value="medium" selected>Medium (+ role + industry)</option><option value="deep">Deep (+ triggers + activity)</option></select></div>
+  <div class="fg"><label>Sequence Length</label><select id="seqLen"><option value="3">3 emails</option><option value="4" selected>4 emails</option><option value="5">5 emails</option></select></div>
+  <div class="fg"><label>Tone</label><select id="tone"><option value="professional" selected>Professional</option><option value="casual">Casual / Peer-to-peer</option><option value="provocative">Provocative / Challenger</option><option value="empathetic">Empathetic / Consultative</option></select></div>
+</div>
+<div class="opts">
+  <div class="fg"><label>CTA Style</label><select id="cta"><option value="meeting" selected>Book a meeting</option><option value="reply">Soft reply</option><option value="value">Offer value first</option><option value="referral">Ask for referral</option></select></div>
+  <div class="fg"><label>Industry</label><select id="industry"><option value="auto" selected>Auto-detect</option><option value="saas">SaaS</option><option value="fintech">Fintech</option><option value="healthcare">Healthcare</option><option value="ecommerce">E-commerce</option><option value="other">Other</option></select></div>
+  <div class="fg"><label>Breakup Email</label><select id="breakup"><option value="yes" selected>Yes — creative breakup at end</option><option value="no">No — standard follow-up</option></select></div>
+</div>
+
+<button class="gbtn" id="genBtn" onclick="generate()">Generate Email Sequence</button>
+<div id="output" style="margin-top:28px"></div>
+</div>
+
+<script>
+(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='salesai-key-delivery'){if(e.data.key&&e.data.provider){document.getElementById('provider').value=e.data.provider;document.getElementById('apiKey').value=e.data.key;sS();uK();}}});if(window.parent!==window){window.parent.postMessage({type:'salesai-key-request',provider:'openai'},'*');setTimeout(()=>window.parent.postMessage({type:'salesai-key-request',provider:'anthropic'},'*'),100);}})();
+</script>
+<script>
+function sS(){try{localStorage.setItem('salesai_cold_email',JSON.stringify({provider:document.getElementById('provider').value,apiKey:document.getElementById('apiKey').value,product:document.getElementById('productCtx').value,value:document.getElementById('valueCtx').value,sender:document.getElementById('senderCtx').value,company:document.getElementById('companyCtx').value}));}catch(e){}uK();}
+function lS(){try{var s=JSON.parse(localStorage.getItem('salesai_cold_email')||'{}');if(s.provider)document.getElementById('provider').value=s.provider;if(s.apiKey)document.getElementById('apiKey').value=s.apiKey;if(s.product)document.getElementById('productCtx').value=s.product;if(s.value)document.getElementById('valueCtx').value=s.value;if(s.sender)document.getElementById('senderCtx').value=s.sender;if(s.company)document.getElementById('companyCtx').value=s.company;}catch(e){}uK();}
+function uK(){var k=document.getElementById('apiKey').value,el=document.getElementById('keyStatus');el.className=k?'ks ok':'ks no';el.textContent=k?'✓ Key saved':'⚠ No API key';}
+function saveSettings(){sS();}function updateKeyStatus(){uK();}
+
+async function callAI(prompt,system){var pv=document.getElementById('provider').value,k=document.getElementById('apiKey').value;if(!k)throw new Error('Add your API key in Settings.');if(pv==='openai'){var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.8,max_tokens:4000})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).choices[0].message.content;}else{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:system,messages:[{role:'user',content:prompt}]})});if(!r.ok){var e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error');}return(await r.json()).content[0].text;}}
+function pJ(r){try{return JSON.parse(r.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}catch(e){var m=r.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('Parse error.');}}
+
+async function generate(){
+  var prospect=document.getElementById('prospectInput').value.trim();
+  if(!prospect){alert('Enter prospect details.');return;}
+  var trigger=document.getElementById('triggerInput').value.trim();
+  var depth=document.getElementById('depth').value;
+  var seqLen=document.getElementById('seqLen').value;
+  var tone=document.getElementById('tone').value;
+  var cta=document.getElementById('cta').value;
+  var industry=document.getElementById('industry').value;
+  var breakup=document.getElementById('breakup').value;
+  var product=document.getElementById('productCtx').value||'[not set]';
+  var valueProp=document.getElementById('valueCtx').value||'[not set]';
+  var sender=document.getElementById('senderCtx').value||'[not set]';
+  var company=document.getElementById('companyCtx').value||'[not set]';
+
+  var btn=document.getElementById('genBtn'),out=document.getElementById('output');
+  btn.disabled=true;btn.textContent='Writing sequence...';
+  out.innerHTML='<div class="loading"><div class="spinner"></div><div style="font-size:13px;color:var(--text2)">Crafting '+seqLen+' personalized emails with A/B variants...</div></div>';
+
+  var daySpacing=seqLen==='3'?[1,4,10]:seqLen==='4'?[1,3,7,14]:[1,3,7,14,21];
+
+  var sys='You are an elite cold email copywriter. Write outbound sequences that sound authentically human — never robotic or templated.\n\nContext:\n- Product: '+product+'\n- Value prop: '+valueProp+'\n- Sender: '+sender+'\n- Company: '+company+'\n- Personalization depth: '+depth+'\n- Tone: '+tone+'\n- CTA style: '+cta+'\n- Industry: '+industry+'\n'+(trigger?'- Trigger event: '+trigger+'\n':'')+'\nRespond in exact JSON (no markdown):\n{\n  "sequence_strategy": "2-sentence arc explanation",\n  "best_send_times": "Recommended days/times",\n  "emails": [\n    {\n      "position": "Email 1 — Initial Outreach",\n      "send_day": "Day 1",\n      "variant_a": {\n        "subject": "Under 8 words",\n        "body": "The email text",\n        "approach": "One word: Curiosity|Value|Pain|Social|Direct|Story"\n      },\n      "variant_b": {\n        "subject": "Different angle, under 8 words",\n        "body": "Different hook entirely",\n        "approach": "One word label"\n      },\n      "predicted_open_rate": "35%",\n      "predicted_reply_rate": "4%",\n      "personalization_used": "Which specific detail was referenced"\n    }\n  ]\n}\n\nGenerate exactly '+seqLen+' emails. Send days: '+daySpacing.join(', ')+'.\n\nRules:\n- NO "I hope this finds you well", "I wanted to reach out", "I noticed that"\n- Each email DIFFERENT angle (not just "following up on my last email")\n- Under 100 words per email — shorter wins\n- A/B variants must use genuinely DIFFERENT hooks, not reworded same idea\n- Reference something SPECIFIC about the prospect in every email\n- '+(breakup==='yes'?'Last email is a creative breakup (humor, pattern-interrupt, or graceful exit)':'Last email is a value-add follow-up')+'\n- If depth is "deep", use trigger events and recent activity\n- Sign off naturally as '+sender;
+
+  try{
+    var raw=await callAI('Write a cold email sequence for this prospect:\n\n'+prospect,sys);
+    var p=pJ(raw);window._seq=p;
+
+    var h='';
+    // Strategy box
+    h+='<div class="strat-box"><div style="font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sequence Strategy</div><div style="font-size:13px;color:var(--text2);line-height:1.6">'+p.sequence_strategy+'</div>';
+    if(p.best_send_times)h+='<div style="margin-top:8px;font-size:12px;color:var(--text3)">⏰ '+p.best_send_times+'</div>';
+    h+='</div>';
+
+    // Timeline
+    h+='<div class="timeline">';
+    p.emails.forEach(function(em,i){
+      h+='<div class="tl-node"><div class="tl-dot">'+(i+1)+'</div><div class="tl-day">'+em.send_day+'</div></div>';
+      if(i<p.emails.length-1)h+='<div class="tl-line"></div>';
+    });
+    h+='</div>';
+
+    // Email cards
+    p.emails.forEach(function(em,i){
+      var openColor=parseInt(em.predicted_open_rate)>=40?'var(--green)':parseInt(em.predicted_open_rate)>=25?'var(--yellow)':'var(--red)';
+      var replyColor=parseInt(em.predicted_reply_rate)>=5?'var(--green)':parseInt(em.predicted_reply_rate)>=2?'var(--yellow)':'var(--red)';
+
+      h+='<div class="ecard" style="animation-delay:'+i*0.1+'s">';
+      h+='<div class="ecard-hdr"><div><span class="ecard-label" style="color:var(--accent)">'+em.position+'</span> <span style="font-size:11px;color:var(--text3);margin-left:6px">'+em.send_day+'</span></div><div class="ecard-meta"><span class="pred" style="background:'+openColor+'14;color:'+openColor+'">Open: '+em.predicted_open_rate+'</span><span class="pred" style="background:'+replyColor+'14;color:'+replyColor+'">Reply: '+em.predicted_reply_rate+'</span></div></div>';
+
+      // Variant tabs
+      h+='<div class="vtabs"><button class="vtab active" onclick="switchV('+i+',\'a\',this)">A — '+em.variant_a.approach+'</button><button class="vtab" onclick="switchV('+i+',\'b\',this)">B — '+em.variant_b.approach+'</button><button class="cpbtn" style="margin-left:auto" onclick="copyV('+i+',this)">Copy</button></div>';
+
+      // Variant A (default visible)
+      h+='<div class="ebody" id="v'+i+'a"><div class="esubject">Subject: '+em.variant_a.subject+'</div><div class="etext">'+em.variant_a.body+'</div></div>';
+      h+='<div class="ebody" id="v'+i+'b" style="display:none"><div class="esubject">Subject: '+em.variant_b.subject+'</div><div class="etext">'+em.variant_b.body+'</div></div>';
+
+      if(em.personalization_used)h+='<div class="enote">🎯 Personalization: '+em.personalization_used+'</div>';
+      h+='</div>';
+    });
+
+    // Copy full sequence button
+    h+='<button onclick="copyFull()" style="width:100%;padding:14px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .2s" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--bdr)\';this.style.color=\'var(--text)\'">📋 Copy Full Sequence (Variant A)</button>';
+
+    out.innerHTML=h;
+  }catch(e){out.innerHTML='<div class="error">⚠ '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='Generate Email Sequence';
+}
+
+// Track which variant is active per email
+var activeVariants={};
+function switchV(idx,v,btn){
+  activeVariants[idx]=v;
+  btn.parentElement.querySelectorAll('.vtab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('v'+idx+'a').style.display=v==='a'?'block':'none';
+  document.getElementById('v'+idx+'b').style.display=v==='b'?'block':'none';
+}
+function copyV(idx,btn){
+  var p=window._seq;if(!p)return;
+  var em=p.emails[idx];
+  var v=(activeVariants[idx]||'a')==='a'?em.variant_a:em.variant_b;
+  navigator.clipboard.writeText('Subject: '+v.subject+'\n\n'+v.body);
+  btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);
+}
+function copyFull(){
+  var p=window._seq;if(!p)return;
+  var text=p.emails.map(function(em,i){
+    var v=em.variant_a;
+    return '--- '+em.position+' ('+em.send_day+') ---\nSubject: '+v.subject+'\n\n'+v.body;
+  }).join('\n\n');
+  navigator.clipboard.writeText(text);
+}
+lS();
+</script>
+</body>
+</html>
