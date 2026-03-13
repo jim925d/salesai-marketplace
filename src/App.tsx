@@ -17,8 +17,13 @@ import { initAuthListener } from '@/lib/firebase'
 
 export default function App() {
   useEffect(() => {
-    const unsubscribe = initAuthListener()
-    return () => unsubscribe()
+    try {
+      const unsubscribe = initAuthListener()
+      return () => unsubscribe()
+    } catch {
+      // Firebase not configured — app still works without auth
+      console.warn('Firebase not configured — auth disabled')
+    }
   }, [])
 
   return (

@@ -14,9 +14,9 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { supabase, setSupabaseAuth } from './supabase'
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'demo-key',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'demo.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'demo-project',
 }
 
 const app = initializeApp(firebaseConfig)
