@@ -9,9 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Star, Users, Shield, Check } from 'lucide-react'
+import { Star, Users, Shield, Check, Loader2 } from 'lucide-react'
 import type { App } from '@/store/useAppStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { createCheckout } from '@/lib/stripe'
+import { toast } from 'sonner'
+import { useState } from 'react'
 
 interface AppDetailModalProps {
   app: App | null
@@ -29,15 +32,41 @@ export default function AppDetailModal({
   onPurchase,
 }: AppDetailModalProps) {
   const { user, openAuthModal } = useAuthStore()
+  const [purchasing, setPurchasing] = useState(false)
 
   if (!app) return null
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!user) {
       openAuthModal()
       return
     }
-    onPurchase?.(app)
+
+    setPurchasing(true)
+    try {
+      const result = await createCheckout(app.id)
+
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      if (result.free) {
+        toast.success(`${app.name} added to your workspace!`)
+        onPurchase?.(app)
+        onClose()
+        return
+      }
+
+      if (result.sessionUrl) {
+        // Redirect to Stripe Checkout
+        window.location.href = result.sessionUrl
+      }
+    } catch {
+      toast.error('Failed to start checkout')
+    } finally {
+      setPurchasing(false)
+    }
   }
 
   return (
@@ -176,9 +205,18 @@ export default function AppDetailModal({
                 : 'bg-ice text-midnight hover:bg-ice/90'
             }
             onClick={handlePurchase}
-            disabled={owned}
+            disabled={owned || purchasing}
           >
-            {owned ? 'Already owned' : 'Add to workspace'}
+            {purchasing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : owned ? (
+              'Already owned'
+            ) : (
+              'Add to workspace'
+            )}
           </Button>
         </div>
       </DialogContent>

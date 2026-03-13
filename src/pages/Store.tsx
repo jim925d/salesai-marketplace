@@ -11,6 +11,8 @@ import { Search, ChevronDown } from 'lucide-react'
 import AppCard from '@/components/cards/AppCard'
 import AppDetailModal from '@/components/modals/AppDetailModal'
 import { useAuthStore } from '@/store/useAuthStore'
+import { createCheckout } from '@/lib/stripe'
+import { toast } from 'sonner'
 import type { App } from '@/store/useAppStore'
 
 const categories = ['All', 'Outreach', 'Prospecting', 'Meeting Prep', 'Productivity'] as const
@@ -148,13 +150,31 @@ export default function Store() {
     setDetailOpen(true)
   }
 
-  const handlePurchase = (app: App) => {
+  const handlePurchase = async (app: App) => {
     if (!user) {
       openAuthModal()
       return
     }
-    // TODO: Implement real purchase flow via Stripe
-    console.log('Purchase:', app.name)
+
+    try {
+      const result = await createCheckout(app.id)
+
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      if (result.free) {
+        toast.success(`${app.name} added to your workspace!`)
+        return
+      }
+
+      if (result.sessionUrl) {
+        window.location.href = result.sessionUrl
+      }
+    } catch {
+      toast.error('Failed to start checkout')
+    }
   }
 
   const currentSortLabel =
