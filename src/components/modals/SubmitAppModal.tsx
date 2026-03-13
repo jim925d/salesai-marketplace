@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getAuth } from 'firebase/auth'
+import { sanitize, sanitizeHTML } from '@/lib/sanitize'
 
 interface SubmitAppModalProps {
   open: boolean
@@ -114,12 +115,12 @@ export default function SubmitAppModal({
       const token = await user.getIdToken(true)
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('name', name)
+      formData.append('name', sanitize(name))
       formData.append('icon', icon)
       formData.append('category', category)
       formData.append('priceCents', String(priceCents))
-      formData.append('description', description)
-      formData.append('longDescription', longDescription)
+      formData.append('description', sanitize(description))
+      formData.append('longDescription', sanitizeHTML(longDescription))
 
       const res = await fetch('/api/submit-app', {
         method: 'POST',

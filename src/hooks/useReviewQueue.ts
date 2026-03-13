@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { getAuth } from 'firebase/auth'
+import { sanitize } from '@/lib/sanitize'
 
 export interface ReviewApp {
   id: string
@@ -169,7 +170,7 @@ export function useReviewQueue() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ appId, action, reason }),
+        body: JSON.stringify({ appId, action, reason: reason ? sanitize(reason) : undefined }),
       })
 
       const data = await res.json()

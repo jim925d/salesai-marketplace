@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { signUpWithEmail, signInWithEmail, signInWithGoogle } from '@/lib/firebase'
 import { toast } from 'sonner'
 import { Loader2, Mail } from 'lucide-react'
+import { sanitize } from '@/lib/sanitize'
 
 export default function AuthModal() {
   const { authModalOpen, closeAuthModal } = useAuthStore()
@@ -42,7 +43,7 @@ export default function AuthModal() {
 
     try {
       if (mode === 'signup') {
-        await signUpWithEmail(email, password, name)
+        await signUpWithEmail(email, password, sanitize(name))
         toast.success('Account created! Welcome to SalesAI.')
       } else {
         await signInWithEmail(email, password)

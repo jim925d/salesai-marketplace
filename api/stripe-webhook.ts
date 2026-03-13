@@ -6,8 +6,12 @@
 import Stripe from 'stripe'
 import { supabaseAdmin } from './lib/verify-auth'
 import { auditLog } from './lib/audit'
+import { rateLimit } from './lib/rate-limit'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+// Rate limit: 100 webhook events per minute per IP (prevents replay/flooding)
+const limiter = rateLimit({ windowMs: 60_000, max: 100 })
 
 export const config = {
   // Vercel: don't parse body — we need the raw string for signature verification
@@ -20,7 +24,19 @@ export default async function handler(req: Request) {
     return new Response('', { status: 405 })
   }
 
-  // 2. Read raw body for signature verification
+  // 2. Rate limit
+  const rateLimitResult = limiter.check(req)
+  if (!rateLimitResult.allowed) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: {
+        'Retry-After': String(rateLimitResult.retryAfter),
+        'Content-Type': 'application/json',
+      },
+    })
+  }
+
+  // 3. Read raw body for signature verification
   const body = await req.text()
   const signature = req.headers.get('stripe-signature')
 

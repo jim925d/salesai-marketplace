@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { signInWithEmail, signInWithGoogle, signUpDeveloper } from '@/lib/firebase'
 import { toast } from 'sonner'
 import { Loader2, Mail, Code2 } from 'lucide-react'
+import { sanitize } from '@/lib/sanitize'
 
 export default function DevAuthModal() {
   const { devAuthModalOpen, closeDevAuthModal } = useAuthStore()
@@ -44,7 +45,7 @@ export default function DevAuthModal() {
 
     try {
       if (mode === 'signup') {
-        await signUpDeveloper(email, password, name, companyName)
+        await signUpDeveloper(email, password, sanitize(name), sanitize(companyName))
         toast.success('Developer account created! Welcome to SalesAI.')
       } else {
         await signInWithEmail(email, password)
