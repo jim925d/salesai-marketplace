@@ -18,6 +18,7 @@ type AuditAction =
   | 'fraud_check_failed'
   | 'webhook_received'
   | 'webhook_error'
+  | 'app_submitted'
 
 export async function auditLog(params: {
   userId?: string | null
