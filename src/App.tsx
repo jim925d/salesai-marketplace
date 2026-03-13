@@ -1,8 +1,11 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import Toast from '@/components/layout/Toast'
+import AuthModal from '@/components/modals/AuthModal'
+import DevAuthModal from '@/components/modals/DevAuthModal'
 import Landing from '@/pages/Landing'
 import Store from '@/pages/Store'
 import BuyerDashboard from '@/pages/BuyerDashboard'
@@ -10,8 +13,14 @@ import DevPortal from '@/pages/DevPortal'
 import DevSubmit from '@/pages/DevSubmit'
 import AdminReview from '@/pages/AdminReview'
 import NotFound from '@/pages/NotFound'
+import { initAuthListener } from '@/lib/firebase'
 
 export default function App() {
+  useEffect(() => {
+    const unsubscribe = initAuthListener()
+    return () => unsubscribe()
+  }, [])
+
   return (
     <BrowserRouter>
       <TooltipProvider>
@@ -30,6 +39,8 @@ export default function App() {
           </main>
           <Footer />
           <Toast />
+          <AuthModal />
+          <DevAuthModal />
         </div>
       </TooltipProvider>
     </BrowserRouter>

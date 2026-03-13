@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/useAuthStore'
+import { signOut } from '@/lib/firebase'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,10 +10,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { toast } from 'sonner'
 import { Store, LayoutDashboard, Code2, Shield, LogOut, Settings, ChevronDown } from 'lucide-react'
 
 export default function Navbar() {
-  const { user, logout } = useAuthStore()
+  const { user, openAuthModal } = useAuthStore()
   const location = useLocation()
 
   const navLinks = [
@@ -27,6 +29,15 @@ export default function Navbar() {
       ? [{ to: '/admin/review', label: 'Review', icon: Shield }]
       : []),
   ]
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      toast.success('Signed out')
+    } catch {
+      toast.error('Failed to sign out')
+    }
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-midnight/80 backdrop-blur-xl">
@@ -90,7 +101,7 @@ export default function Navbar() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={logout}
+                  onClick={handleSignOut}
                   className="text-red"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -103,12 +114,14 @@ export default function Navbar() {
               <Button
                 variant="ghost"
                 className="text-sm text-muted-foreground hover:text-foreground"
+                onClick={openAuthModal}
               >
                 Sign in
               </Button>
               <Button
                 size="sm"
                 className="bg-ice text-midnight hover:bg-ice/90"
+                onClick={openAuthModal}
               >
                 Get Started
               </Button>
