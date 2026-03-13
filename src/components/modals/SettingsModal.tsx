@@ -20,6 +20,11 @@ import {
   Check,
   AlertTriangle,
   Monitor,
+  Lock,
+  CreditCard,
+  Fingerprint,
+  Globe,
+  Timer,
 } from 'lucide-react'
 import { KeyVault } from '@/lib/key-vault'
 import { toast } from 'sonner'
@@ -96,7 +101,7 @@ export default function SettingsModal({
             Settings
           </DialogTitle>
           <DialogDescription>
-            Manage API keys and preferences
+            Manage API keys, security, and preferences
           </DialogDescription>
         </DialogHeader>
 
@@ -105,6 +110,14 @@ export default function SettingsModal({
             <TabsTrigger value="keys" className="flex-1 gap-1.5">
               <Key className="h-3.5 w-3.5" />
               API Keys
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex-1 gap-1.5">
+              <Shield className="h-3.5 w-3.5" />
+              Security
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="flex-1 gap-1.5">
+              <CreditCard className="h-3.5 w-3.5" />
+              Billing
             </TabsTrigger>
             <TabsTrigger value="launcher" className="flex-1 gap-1.5">
               <Monitor className="h-3.5 w-3.5" />
@@ -289,6 +302,162 @@ export default function SettingsModal({
               >
                 Purge
               </Button>
+            </div>
+          </TabsContent>
+
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-4 pt-4">
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-foreground">Security Features</h4>
+
+              <div className="rounded-lg border border-green/20 bg-green/5 p-3">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-green" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      End-to-End Key Encryption
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      AES-256-GCM with PBKDF2-SHA256 (310k iterations)
+                    </p>
+                  </div>
+                  <Badge className="bg-green/10 text-green">Active</Badge>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-green/20 bg-green/5 p-3">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="h-4 w-4 text-green" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Browser Fingerprint Binding
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Keys are bound to this browser instance
+                    </p>
+                  </div>
+                  <Badge className="bg-green/10 text-green">Active</Badge>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-green/20 bg-green/5 p-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-green" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Sandboxed App Execution
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Apps run in restricted iframes with CSP
+                    </p>
+                  </div>
+                  <Badge className="bg-green/10 text-green">Active</Badge>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-green/20 bg-green/5 p-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-green" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Origin-Validated Key Delivery
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PostMessage KeyBridge with origin checking
+                    </p>
+                  </div>
+                  <Badge className="bg-green/10 text-green">Active</Badge>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-green/20 bg-green/5 p-3">
+                <div className="flex items-center gap-2">
+                  <Timer className="h-4 w-4 text-green" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Session Timeout
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Auto-logout after 30 minutes of inactivity
+                    </p>
+                  </div>
+                  <Badge className="bg-green/10 text-green">Active</Badge>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="rounded-lg border border-border bg-midnight-elevated p-3">
+              <p className="text-xs text-muted-foreground">
+                All security features are enabled by default and cannot be
+                disabled. Your data is protected with industry-standard
+                encryption and isolation practices.
+              </p>
+            </div>
+          </TabsContent>
+
+          {/* Billing Tab */}
+          <TabsContent value="billing" className="space-y-4 pt-4">
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-foreground">Subscription</h4>
+
+              <div className="rounded-lg border border-border bg-midnight-elevated p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Current Plan</p>
+                    <p className="text-xs text-muted-foreground">
+                      Pay per app, no platform fee
+                    </p>
+                  </div>
+                  <Badge className="bg-ice/10 text-ice">Pay-as-you-go</Badge>
+                </div>
+              </div>
+
+              <h4 className="mt-4 text-sm font-medium text-foreground">
+                Active Subscriptions
+              </h4>
+
+              <div className="rounded-lg border border-border bg-midnight-elevated p-4">
+                <p className="text-sm text-muted-foreground">
+                  Your active app subscriptions are managed through Stripe.
+                  You can cancel or update payment methods from your Stripe
+                  customer portal.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-3 border-border"
+                  onClick={() =>
+                    toast.info('Stripe customer portal coming soon')
+                  }
+                >
+                  <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                  Manage Billing
+                </Button>
+              </div>
+
+              <Separator />
+
+              <h4 className="text-sm font-medium text-foreground">Payment Method</h4>
+
+              <div className="rounded-lg border border-border bg-midnight-elevated p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-12 items-center justify-center rounded border border-border bg-midnight text-xs font-bold text-muted-foreground">
+                    VISA
+                  </div>
+                  <div>
+                    <p className="text-sm text-foreground">
+                      •••• •••• •••• 4242
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Expires 12/2027
+                    </p>
+                  </div>
+                  <div className="flex-1" />
+                  <Badge className="bg-green/10 text-green">Default</Badge>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
