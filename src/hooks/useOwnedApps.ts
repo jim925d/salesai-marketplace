@@ -53,7 +53,7 @@ export function useOwnedApps() {
   const { user } = useAuthStore()
   const [ownedApps, setOwnedApps] = useState<App[]>(MOCK_OWNED_APPS)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [_error, _setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user?.supabaseId) {
@@ -66,7 +66,7 @@ export function useOwnedApps() {
     setLoading(false)
   }, [user?.supabaseId])
 
-  return { ownedApps, loading, error, setOwnedApps }
+  return { ownedApps, loading, error: _error, setOwnedApps }
 }
 
 export function useDashboardPreferences() {

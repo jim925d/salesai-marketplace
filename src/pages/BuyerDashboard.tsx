@@ -43,7 +43,7 @@ import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
 
 export default function BuyerDashboard() {
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const { ownedApps } = useOwnedApps()
   const { preferences, savePreferences } = useDashboardPreferences()
 

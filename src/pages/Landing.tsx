@@ -5,7 +5,6 @@ import { Separator } from '@/components/ui/separator'
 import {
   Star,
   ArrowRight,
-  Shield,
   Zap,
   Clock,
   DollarSign,

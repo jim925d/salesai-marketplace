@@ -235,7 +235,7 @@ export default function SubmitAppModal({
                   <label className="mb-1.5 block text-sm font-medium text-foreground">
                     Category
                   </label>
-                  <Select value={category} onValueChange={setCategory}>
+                  <Select value={category} onValueChange={(v) => setCategory(v ?? '')}>
                     <SelectTrigger className="border-border bg-midnight-elevated">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
