@@ -24,5 +24,5 @@ ALTER TABLE purchases ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "purchases_read_own" ON purchases
   FOR SELECT USING (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );

@@ -20,22 +20,22 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- Users can read their own data
 CREATE POLICY "users_select_own" ON users
-  FOR SELECT USING (firebase_uid = auth.uid());
+  FOR SELECT USING (firebase_uid = auth.uid()::text);
 
 -- Users can update their own data but NOT change their role
 CREATE POLICY "users_update_own" ON users
-  FOR UPDATE USING (firebase_uid = auth.uid())
+  FOR UPDATE USING (firebase_uid = auth.uid()::text)
   WITH CHECK (
-    firebase_uid = auth.uid()
-    AND role = (SELECT role FROM users WHERE firebase_uid = auth.uid())
+    firebase_uid = auth.uid()::text
+    AND role = (SELECT role FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 -- Allow inserts from authenticated users (for initial profile creation)
 CREATE POLICY "users_insert_own" ON users
-  FOR INSERT WITH CHECK (firebase_uid = auth.uid());
+  FOR INSERT WITH CHECK (firebase_uid = auth.uid()::text);
 
 -- Admins can read all users
 CREATE POLICY "admin_read_users" ON users
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM users WHERE firebase_uid = auth.uid() AND role = 'admin')
+    EXISTS (SELECT 1 FROM users WHERE firebase_uid = auth.uid()::text AND role = 'admin')
   );

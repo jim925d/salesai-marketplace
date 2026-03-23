@@ -39,7 +39,7 @@ ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 -- Buyers can see their own transactions
 CREATE POLICY "transactions_buyer_read" ON transactions
   FOR SELECT USING (
-    buyer_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    buyer_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 -- Developers can see transactions for their apps
@@ -47,7 +47,7 @@ CREATE POLICY "transactions_dev_read" ON transactions
   FOR SELECT USING (
     developer_id IN (
       SELECT id FROM developer_profiles
-      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
     )
   );
 
@@ -59,6 +59,6 @@ CREATE POLICY "payouts_dev_read" ON payouts
   FOR SELECT USING (
     developer_id IN (
       SELECT id FROM developer_profiles
-      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
     )
   );

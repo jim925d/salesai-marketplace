@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080B12;--bg2:#0D1117;--bg3:#161B22;
+  --accent:#58A6FF;--accent-dim:rgba(88,166,255,0.08);--accent-bdr:rgba(88,166,255,0.2);
+  --text:#E6EDF3;--text2:#A0A8B4;--text3:#7A8494;
+  --bdr:rgba(230,237,243,0.06);--bdr-h:rgba(230,237,243,0.13);
+  --glass:rgba(230,237,243,0.02);
+  --green:#3FB950;--purple:#D2A8FF;--red:#F85149;--yellow:#E3B341;
+}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;position:sticky;top:0;z-index:100;background:rgba(8,11,18,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo span{font-family:Georgia,serif;font-size:15px;letter-spacing:-0.3px}
+
+.container{max-width:720px;margin:0 auto;padding:28px}
+.section-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:10px}
+
+.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:24px;margin-bottom:16px}
+.card-title{font-family:Georgia,serif;font-size:20px;margin-bottom:4px;letter-spacing:-0.5px}
+.card-desc{font-size:13px;color:var(--text2);margin-bottom:20px}
+
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;font-weight:500}
+input[type="number"],input[type="text"],select{width:100%;background:var(--glass);border:1px solid var(--bdr);color:var(--text);padding:12px 14px;border-radius:8px;font-family:inherit;font-size:14px;transition:border-color .2s;outline:none}
+input:focus,select:focus{border-color:var(--accent-bdr);box-shadow:0 0 0 3px var(--accent-dim)}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.calc-btn{background:var(--accent);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;font-family:inherit}
+.calc-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(88,166,255,0.25)}
+
+.results{display:none;animation:fadeUp .4s ease}
+.results.show{display:block}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.result-item{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;padding:16px;text-align:center}
+.result-value{font-family:Georgia,serif;font-size:28px;font-weight:700;letter-spacing:-1px}
+.result-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-top:4px}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+
+.breakdown{background:var(--glass);border:1px solid var(--bdr);border-radius:8px;overflow:hidden}
+.breakdown-row{display:flex;justify-content:space-between;padding:12px 16px;font-size:13px;border-bottom:1px solid var(--bdr)}
+.breakdown-row:last-child{border-bottom:none}
+.breakdown-row .label{color:var(--text2)}
+.breakdown-row .value{font-family:'JetBrains Mono',monospace;font-size:12px}
+
+.footer-note{text-align:center;font-size:11px;color:var(--text3);margin-top:20px}
+
+@keyframes fadeUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="logo">
+    <div class="logo-mark">📊</div>
+    <span>ROI Calculator</span>
+  </div>
+  <span style="font-size:11px;color:var(--text3)">v1.0 · Test App</span>
+</header>
+
+<main class="container">
+  <div class="card">
+    <div class="section-label">Sales Tool ROI</div>
+    <h1 class="card-title">Calculate your return on investment</h1>
+    <p class="card-desc">Enter your current sales metrics to see projected ROI from AI-powered sales tools.</p>
+
+    <div class="row">
+      <div class="form-group">
+        <label>Monthly Revenue ($)</label>
+        <input type="number" id="revenue" placeholder="50000" value="50000">
+      </div>
+      <div class="form-group">
+        <label>Sales Team Size</label>
+        <input type="number" id="teamSize" placeholder="5" value="5">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>Avg Deal Size ($)</label>
+        <input type="number" id="dealSize" placeholder="5000" value="5000">
+      </div>
+      <div class="form-group">
+        <label>Win Rate (%)</label>
+        <input type="number" id="winRate" placeholder="25" value="25" min="1" max="100">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>Deals per Rep per Month</label>
+        <input type="number" id="dealsPerRep" placeholder="10" value="10">
+      </div>
+      <div class="form-group">
+        <label>Tool Cost ($/month)</label>
+        <input type="number" id="toolCost" placeholder="99" value="99">
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">Calculate ROI</button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="card">
+      <div class="section-label">Projected Results</div>
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="result-value positive" id="roiPercent">—</div>
+          <div class="result-label">ROI</div>
+        </div>
+        <div class="result-item">
+          <div class="result-value positive" id="additionalRev">—</div>
+          <div class="result-label">Added Revenue/mo</div>
+        </div>
+        <div class="result-item">
+          <div class="result-value" id="payback" style="color:var(--accent)">—</div>
+          <div class="result-label">Payback Period</div>
+        </div>
+      </div>
+
+      <div class="section-label">Breakdown</div>
+      <div class="breakdown">
+        <div class="breakdown-row">
+          <span class="label">Current monthly revenue</span>
+          <span class="value" id="bkCurrent">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label">Projected win rate improvement</span>
+          <span class="value positive" id="bkWinRate">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label">Projected new monthly revenue</span>
+          <span class="value positive" id="bkNew">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label">Monthly tool investment</span>
+          <span class="value negative" id="bkCost">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label">Net monthly gain</span>
+          <span class="value positive" id="bkNet">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label">Annual projected gain</span>
+          <span class="value positive" id="bkAnnual">—</span>
+        </div>
+      </div>
+
+      <p class="footer-note">Estimates assume a conservative 15% win-rate improvement from AI tooling based on industry benchmarks.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+function fmt(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n)}
+
+function calculate(){
+  const revenue=+document.getElementById('revenue').value||0;
+  const teamSize=+document.getElementById('teamSize').value||1;
+  const dealSize=+document.getElementById('dealSize').value||0;
+  const winRate=(+document.getElementById('winRate').value||25)/100;
+  const dealsPerRep=+document.getElementById('dealsPerRep').value||0;
+  const toolCost=+document.getElementById('toolCost').value||0;
+
+  // Conservative 15% relative improvement in win rate
+  const winRateImprovement=0.15;
+  const newWinRate=winRate*(1+winRateImprovement);
+
+  const currentDealsWon=teamSize*dealsPerRep*winRate;
+  const newDealsWon=teamSize*dealsPerRep*newWinRate;
+  const additionalDeals=newDealsWon-currentDealsWon;
+  const additionalRevenue=additionalDeals*dealSize;
+  const netGain=additionalRevenue-toolCost;
+  const roi=toolCost>0?((netGain/toolCost)*100):0;
+  const paybackDays=additionalRevenue>0?Math.ceil((toolCost/additionalRevenue)*30):999;
+
+  document.getElementById('roiPercent').textContent=roi.toFixed(0)+'%';
+  document.getElementById('additionalRev').textContent=fmt(additionalRevenue);
+  document.getElementById('payback').textContent=paybackDays<=30?paybackDays+' days':'~'+Math.ceil(paybackDays/30)+' mo';
+
+  document.getElementById('bkCurrent').textContent=fmt(revenue);
+  document.getElementById('bkWinRate').textContent='+'+(winRateImprovement*100).toFixed(0)+'% ('+((winRate*100).toFixed(0))+'% → '+(newWinRate*100).toFixed(1)+'%)';
+  document.getElementById('bkNew').textContent=fmt(revenue+additionalRevenue);
+  document.getElementById('bkCost').textContent='-'+fmt(toolCost);
+  document.getElementById('bkNet').textContent='+'+fmt(netGain);
+  document.getElementById('bkAnnual').textContent='+'+fmt(netGain*12);
+
+  document.getElementById('results').classList.add('show');
+}
+</script>
+</body>
+</html>

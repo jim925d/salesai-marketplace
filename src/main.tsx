@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import './index.css'
@@ -57,14 +57,39 @@ const ErrorFallback = (
   </div>
 )
 
+// Dev error boundary — shows crash details on screen when Sentry is not configured
+class DevErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null }
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, color: '#f00', fontFamily: 'monospace', background: '#111' }}>
+          <h1>React Error</h1>
+          <pre style={{ whiteSpace: 'pre-wrap', color: '#ff6' }}>{this.state.error.message}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap', color: '#aaa', fontSize: 12 }}>{this.state.error.stack}</pre>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {sentryDsn ? (
-      <Sentry.ErrorBoundary fallback={ErrorFallback}>
+    <DevErrorBoundary>
+      {sentryDsn ? (
+        <Sentry.ErrorBoundary fallback={ErrorFallback}>
+          <App />
+        </Sentry.ErrorBoundary>
+      ) : (
         <App />
-      </Sentry.ErrorBoundary>
-    ) : (
-      <App />
-    )}
+      )}
+    </DevErrorBoundary>
   </StrictMode>,
 )

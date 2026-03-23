@@ -14,15 +14,36 @@ import DevSubmit from '@/pages/DevSubmit'
 import AdminReview from '@/pages/AdminReview'
 import NotFound from '@/pages/NotFound'
 import { initAuthListener } from '@/lib/firebase'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export default function App() {
   useEffect(() => {
+    const firebaseKey = import.meta.env.VITE_FIREBASE_API_KEY
+    const isFirebaseConfigured = firebaseKey && firebaseKey !== 'demo-key'
+
+    if (!isFirebaseConfigured) {
+      // No Firebase — auto-login as admin for local development
+      console.warn('Firebase not configured — using dev admin bypass')
+      useAuthStore.getState().setUser({
+        uid: 'dev-admin-local',
+        email: 'admin@salesai.dev',
+        name: 'Admin (Dev)',
+        role: 'admin',
+      })
+      return
+    }
+
     try {
       const unsubscribe = initAuthListener()
       return () => unsubscribe()
     } catch {
-      // Firebase not configured — app still works without auth
-      console.warn('Firebase not configured — auth disabled')
+      console.warn('Firebase init failed — using dev admin bypass')
+      useAuthStore.getState().setUser({
+        uid: 'dev-admin-local',
+        email: 'admin@salesai.dev',
+        name: 'Admin (Dev)',
+        role: 'admin',
+      })
     }
   }, [])
 

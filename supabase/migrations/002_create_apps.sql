@@ -67,17 +67,17 @@ ALTER TABLE developer_profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "dev_profiles_select_own" ON developer_profiles
   FOR SELECT USING (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 CREATE POLICY "dev_profiles_insert_own" ON developer_profiles
   FOR INSERT WITH CHECK (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 CREATE POLICY "dev_profiles_update_own" ON developer_profiles
   FOR UPDATE USING (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 -- RLS for apps
@@ -92,7 +92,7 @@ CREATE POLICY "apps_dev_read_own" ON apps
   FOR SELECT USING (
     developer_id IN (
       SELECT id FROM developer_profiles
-      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
     )
   );
 
@@ -101,7 +101,7 @@ CREATE POLICY "apps_dev_insert" ON apps
   FOR INSERT WITH CHECK (
     developer_id IN (
       SELECT id FROM developer_profiles
-      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
     )
   );
 
@@ -110,7 +110,7 @@ CREATE POLICY "apps_dev_update" ON apps
   FOR UPDATE USING (
     developer_id IN (
       SELECT id FROM developer_profiles
-      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
     )
     AND status NOT IN ('approved', 'suspended')
   );
@@ -118,7 +118,7 @@ CREATE POLICY "apps_dev_update" ON apps
 -- Admins have full access to apps
 CREATE POLICY "admin_full_apps" ON apps
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM users WHERE firebase_uid = auth.uid() AND role = 'admin')
+    EXISTS (SELECT 1 FROM users WHERE firebase_uid = auth.uid()::text AND role = 'admin')
   );
 
 -- RLS for app_versions
@@ -130,11 +130,11 @@ CREATE POLICY "app_versions_dev_read" ON app_versions
       SELECT a.id FROM apps a
       JOIN developer_profiles dp ON a.developer_id = dp.id
       JOIN users u ON dp.user_id = u.id
-      WHERE u.firebase_uid = auth.uid()
+      WHERE u.firebase_uid = auth.uid()::text
     )
   );
 
 CREATE POLICY "admin_full_app_versions" ON app_versions
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM users WHERE firebase_uid = auth.uid() AND role = 'admin')
+    EXISTS (SELECT 1 FROM users WHERE firebase_uid = auth.uid()::text AND role = 'admin')
   );

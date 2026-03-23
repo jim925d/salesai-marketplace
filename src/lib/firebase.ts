@@ -51,8 +51,20 @@ export async function getVerifiedToken(): Promise<string> {
   return user.getIdToken(true)
 }
 
+// Check if Supabase is configured (not using placeholder URL)
+function isSupabaseConfigured(): boolean {
+  const url = import.meta.env.VITE_SUPABASE_URL
+  return Boolean(url && !url.includes('placeholder'))
+}
+
 // Sync Firebase user to Supabase users table
+// Returns null gracefully when Supabase is not configured
 async function syncUserToSupabase(firebaseUser: FirebaseUser, role: 'buyer' | 'developer' = 'buyer') {
+  if (!isSupabaseConfigured()) {
+    console.warn('Supabase not configured — skipping user sync')
+    return null
+  }
+
   const token = await firebaseUser.getIdToken()
   await setSupabaseAuth(token)
 
@@ -104,7 +116,7 @@ export async function signUpWithEmail(
     uid: firebaseUser.uid,
     email: firebaseUser.email || '',
     name,
-    role: supabaseUser.role,
+    role: supabaseUser?.role ?? role,
     avatarUrl: firebaseUser.photoURL || undefined,
   })
 
@@ -115,14 +127,20 @@ export async function signUpWithEmail(
 // Sign in with email/password
 export async function signInWithEmail(email: string, password: string) {
   const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password)
-  const supabaseUser = await syncUserToSupabase(firebaseUser)
+
+  let supabaseUser = null
+  try {
+    supabaseUser = await syncUserToSupabase(firebaseUser)
+  } catch (err) {
+    console.warn('Supabase sync failed (RLS), using Firebase profile:', err)
+  }
 
   useAuthStore.getState().setUser({
     uid: firebaseUser.uid,
     email: firebaseUser.email || '',
-    name: supabaseUser.name || firebaseUser.displayName || '',
-    role: supabaseUser.role,
-    avatarUrl: supabaseUser.avatar_url || undefined,
+    name: supabaseUser?.name || firebaseUser.displayName || '',
+    role: supabaseUser?.role ?? 'buyer',
+    avatarUrl: supabaseUser?.avatar_url || undefined,
   })
 
   resetActivityTimer()
@@ -132,14 +150,21 @@ export async function signInWithEmail(email: string, password: string) {
 // Sign in with Google
 export async function signInWithGoogle(role: 'buyer' | 'developer' = 'buyer') {
   const { user: firebaseUser } = await signInWithPopup(auth, googleProvider)
-  const supabaseUser = await syncUserToSupabase(firebaseUser, role)
+
+  let supabaseUser = null
+  try {
+    supabaseUser = await syncUserToSupabase(firebaseUser, role)
+  } catch (err) {
+    // RLS may block insert — continue with Firebase data only
+    console.warn('Supabase sync failed (RLS), using Firebase profile:', err)
+  }
 
   useAuthStore.getState().setUser({
     uid: firebaseUser.uid,
     email: firebaseUser.email || '',
-    name: supabaseUser.name || firebaseUser.displayName || '',
-    role: supabaseUser.role,
-    avatarUrl: supabaseUser.avatar_url || firebaseUser.photoURL || undefined,
+    name: supabaseUser?.name || firebaseUser.displayName || '',
+    role: supabaseUser?.role ?? role,
+    avatarUrl: supabaseUser?.avatar_url || firebaseUser.photoURL || undefined,
   })
 
   resetActivityTimer()
@@ -158,11 +183,13 @@ export async function signUpDeveloper(
 
   const supabaseUser = await syncUserToSupabase(firebaseUser, 'developer')
 
-  // Create developer profile
-  await supabase.from('developer_profiles').insert({
-    user_id: supabaseUser.id,
-    company_name: companyName,
-  })
+  // Create developer profile (only if Supabase is configured)
+  if (supabaseUser) {
+    await supabase.from('developer_profiles').insert({
+      user_id: supabaseUser.id,
+      company_name: companyName,
+    })
+  }
 
   useAuthStore.getState().setUser({
     uid: firebaseUser.uid,
@@ -189,13 +216,18 @@ export function initAuthListener() {
   return onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       try {
-        const supabaseUser = await syncUserToSupabase(firebaseUser)
+        let supabaseUser = null
+        try {
+          supabaseUser = await syncUserToSupabase(firebaseUser)
+        } catch (err) {
+          console.warn('Supabase sync failed (RLS), using Firebase profile:', err)
+        }
         useAuthStore.getState().setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email || '',
-          name: supabaseUser.name || firebaseUser.displayName || '',
-          role: supabaseUser.role,
-          avatarUrl: supabaseUser.avatar_url || firebaseUser.photoURL || undefined,
+          name: supabaseUser?.name || firebaseUser.displayName || '',
+          role: supabaseUser?.role ?? 'buyer',
+          avatarUrl: supabaseUser?.avatar_url || firebaseUser.photoURL || undefined,
         })
         resetActivityTimer()
       } catch {

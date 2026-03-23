@@ -23,15 +23,15 @@ ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 -- Users can only access their own preferences
 CREATE POLICY "prefs_select_own" ON user_preferences
   FOR SELECT USING (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 CREATE POLICY "prefs_insert_own" ON user_preferences
   FOR INSERT WITH CHECK (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 CREATE POLICY "prefs_update_own" ON user_preferences
   FOR UPDATE USING (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );

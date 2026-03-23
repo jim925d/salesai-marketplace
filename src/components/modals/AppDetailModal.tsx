@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Star, Users, Shield, Check, Loader2 } from 'lucide-react'
+import { Star, Users, Shield, Check, Loader2, Play } from 'lucide-react'
 import type { App } from '@/store/useAppStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { createCheckout } from '@/lib/stripe'
@@ -22,6 +22,7 @@ interface AppDetailModalProps {
   onClose: () => void
   owned?: boolean
   onPurchase?: (app: App) => void
+  onLaunch?: (app: App) => void
 }
 
 export default function AppDetailModal({
@@ -30,6 +31,7 @@ export default function AppDetailModal({
   onClose,
   owned,
   onPurchase,
+  onLaunch,
 }: AppDetailModalProps) {
   const { user, openAuthModal } = useAuthStore()
   const [purchasing, setPurchasing] = useState(false)
@@ -197,27 +199,38 @@ export default function AppDetailModal({
               </p>
             )}
           </div>
-          <Button
-            size="lg"
-            className={
-              owned
-                ? 'bg-green/10 text-green hover:bg-green/20'
-                : 'bg-ice text-midnight hover:bg-ice/90'
-            }
-            onClick={handlePurchase}
-            disabled={owned || purchasing}
-          >
-            {purchasing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : owned ? (
-              'Already owned'
-            ) : (
-              'Add to workspace'
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-ice/30 text-ice hover:bg-ice/10"
+              onClick={() => onLaunch?.(app)}
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Launch
+            </Button>
+            <Button
+              size="lg"
+              className={
+                owned
+                  ? 'bg-green/10 text-green hover:bg-green/20'
+                  : 'bg-ice text-midnight hover:bg-ice/90'
+              }
+              onClick={handlePurchase}
+              disabled={owned || purchasing}
+            >
+              {purchasing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : owned ? (
+                'Already owned'
+              ) : (
+                'Add to workspace'
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

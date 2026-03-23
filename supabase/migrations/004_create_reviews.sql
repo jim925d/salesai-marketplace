@@ -24,10 +24,10 @@ CREATE POLICY "reviews_public_read" ON app_reviews
 -- Users can insert reviews for apps they own
 CREATE POLICY "reviews_insert_own" ON app_reviews
   FOR INSERT WITH CHECK (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
     AND app_id IN (
       SELECT app_id FROM purchases
-      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+      WHERE user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
       AND status = 'active'
     )
   );
@@ -35,11 +35,11 @@ CREATE POLICY "reviews_insert_own" ON app_reviews
 -- Users can update their own reviews
 CREATE POLICY "reviews_update_own" ON app_reviews
   FOR UPDATE USING (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
 
 -- Users can delete their own reviews
 CREATE POLICY "reviews_delete_own" ON app_reviews
   FOR DELETE USING (
-    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid())
+    user_id IN (SELECT id FROM users WHERE firebase_uid = auth.uid()::text)
   );
